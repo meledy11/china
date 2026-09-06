@@ -1,0 +1,1537 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>HSK — Слова по уровням</title>
+
+    <link rel="manifest" href="manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="HSK Слова">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📚</text></svg>">
+
+    <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js"></script>
+    <script src="data.js"></script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        html, body {
+            height: 100%;
+            overflow: hidden;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background-color: #0f172a;
+            background-image: radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(236, 72, 153, 0.15) 0px, transparent 50%);
+            color: #e2e8f0;
+        }
+
+        /* ===== ЭКРАН ВЫБОРА ===== */
+        .deck-selector {
+            position: fixed;
+            inset: 0;
+            z-index: 500;
+            background: #0a0f1e;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            overflow-y: auto;
+            transition: opacity .4s, transform .4s;
+        }
+        .deck-selector.hidden {
+            opacity: 0;
+            pointer-events: none;
+            transform: scale(.95);
+        }
+        .deck-selector h1 {
+            font-size: clamp(20px, 4vh, 32px);
+            font-weight: 800;
+            color: #fff;
+            margin-bottom: 4px;
+            text-align: center;
+        }
+        .deck-selector .subtitle {
+            font-size: 14px;
+            color: #94a3b8;
+            margin-bottom: 16px;
+            text-align: center;
+        }
+
+        /* ===== ПОИСК ===== */
+        .search-wrapper {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            margin-bottom: 18px;
+            z-index: 10;
+        }
+        .search-wrapper input {
+            width: 100%;
+            padding: 12px 44px 12px 18px;
+            border-radius: 14px;
+            border: 1px solid rgba(255,255,255,.12);
+            background: rgba(255,255,255,.06);
+            color: #fff;
+            font-size: 15px;
+            font-weight: 600;
+            outline: none;
+            transition: all .2s;
+            font-family: inherit;
+        }
+        .search-wrapper input::placeholder {
+            color: #64748b;
+            font-weight: 500;
+        }
+        .search-wrapper input:focus {
+            border-color: #6366f1;
+            background: rgba(99,102,241,.08);
+            box-shadow: 0 0 20px rgba(99,102,241,.15);
+        }
+        .search-clear {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            border: none;
+            background: rgba(255,255,255,.1);
+            color: #94a3b8;
+            font-size: 12px;
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            transition: all .2s;
+        }
+        .search-clear.visible { display: flex; }
+        .search-clear:hover { background: rgba(248,113,113,.3); color: #fff; }
+
+        .search-results {
+            width: 100%;
+            max-width: 900px;
+            display: none;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 10px;
+            margin-bottom: 18px;
+        }
+        .search-results.active { display: grid; }
+
+        .search-card {
+            border-radius: 14px;
+            padding: 14px 10px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            gap: 4px;
+            background: rgba(255,255,255,.04);
+            border: 1px solid rgba(255,255,255,.08);
+            transition: all .2s;
+            position: relative;
+            overflow: hidden;
+        }
+        .search-card:hover {
+            transform: translateY(-3px);
+            background: rgba(255,255,255,.08);
+            border-color: rgba(99,102,241,.4);
+            box-shadow: 0 8px 25px rgba(99,102,241,.15);
+        }
+        .search-card:active { transform: scale(.96); }
+        .search-card .sc-emoji { font-size: 24px; margin-bottom: 2px; }
+        .search-card .sc-hanzi {
+            font-size: 26px;
+            font-weight: 800;
+            color: #f1f5f9;
+            line-height: 1.1;
+        }
+        .search-card .sc-pinyin {
+            font-size: 12px;
+            color: #6366f1;
+            font-weight: 700;
+        }
+        .search-card .sc-ru {
+            font-size: 11px;
+            color: #cbd5e1;
+            line-height: 1.2;
+            word-break: break-word;
+        }
+        .search-card .sc-badge {
+            font-size: 9px;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 10px;
+            background: rgba(99,102,241,.2);
+            color: #818cf8;
+            margin-top: 4px;
+        }
+        .search-empty {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 30px;
+            color: #64748b;
+            font-size: 14px;
+        }
+
+        /* Скрываем табы и сетку колод при активном поиске */
+        .deck-selector.search-active .level-tabs,
+        .deck-selector.search-active .deck-grid { display: none; }
+
+        .level-tabs {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 18px;
+            width: 100%;
+            max-width: 900px;
+        }
+        .level-tab {
+            padding: 6px 18px;
+            border-radius: 30px;
+            border: 1px solid rgba(255, 255, 255, .15);
+            background: rgba(255, 255, 255, .04);
+            color: #94a3b8;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all .2s;
+        }
+        .level-tab.active {
+            background: #6366f1;
+            color: #fff;
+            border-color: #6366f1;
+            box-shadow: 0 0 20px rgba(99, 102, 241, .3);
+        }
+        .level-tab:hover:not(.locked) {
+            transform: translateY(-2px);
+            background: rgba(255, 255, 255, .08);
+        }
+        .level-tab.locked {
+            opacity: .4;
+            pointer-events: none;
+            filter: grayscale(.6);
+        }
+        .deck-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
+            gap: 12px;
+            width: 100%;
+            max-width: 900px;
+        }
+        .deck-card {
+            border-radius: 18px;
+            padding: 18px 14px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            gap: 6px;
+            background: rgba(255, 255, 255, .04);
+            border: 1px solid rgba(255, 255, 255, .08);
+            transition: all .3s cubic-bezier(.4, 0, .2, 1);
+            min-height: 130px;
+        }
+        .deck-card:hover {
+            transform: translateY(-6px);
+            background: rgba(255, 255, 255, .08);
+            border-color: var(--dc);
+            box-shadow: 0 8px 30px color-mix(in srgb, var(--dc) 25%, transparent);
+        }
+        .deck-card:active { transform: scale(.95); }
+        .deck-card .de { font-size: 34px; }
+        .deck-card .dt { font-size: 14px; font-weight: 700; color: #fff; }
+        .deck-card .dn { font-size: 11px; color: #94a3b8; font-weight: 600; }
+        .deck-card .dp { font-size: 10px; color: #64748b; margin-top: 2px; line-height: 1.3; }
+
+        .dc1 { --dc: #f472b6; }
+        .dc2 { --dc: #60a5fa; }
+        .dc3 { --dc: #34d399; }
+        .dc4 { --dc: #fbbf24; }
+        .dc5 { --dc: #a78bfa; }
+        .dc6 { --dc: #f87171; }
+        .dc7 { --dc: #2dd4bf; }
+        .dc8 { --dc: #fb923c; }
+        .dc9 { --dc: #e879f9; }
+        .dc10 { --dc: #38bdf8; }
+        .dc11 { --dc: #4ade80; }
+        .dc12 { --dc: #facc15; }
+        .dc13 { --dc: #c084fc; }
+        .dc14 { --dc: #fb7185; }
+        .dc15 { --dc: #22d3ee; }
+        .dc16 { --dc: #f472b6; }
+        .dc17 { --dc: #60a5fa; }
+        .dc18 { --dc: #34d399; }
+        .dc19 { --dc: #fbbf24; }
+        .dc20 { --dc: #a78bfa; }
+
+        /* ===== ИГРОВОЙ ЭКРАН ===== */
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            height: 60px;
+            background: rgba(15, 23, 42, .95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, .08);
+            z-index: 100;
+            position: sticky;
+            top: 0;
+        }
+        .score-board { font-size: 18px; font-weight: 700; color: #fff; }
+        .score-board span { color: #4ade80; font-size: 24px; }
+        .mode-label {
+            font-size: 12px;
+            color: #94a3b8;
+            font-weight: 600;
+            margin-top: 2px;
+            max-width: 220px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .btn {
+            padding: 8px 14px;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 12px;
+            transition: all .2s;
+            background: rgba(255, 255, 255, .1);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, .2);
+        }
+        .btn:hover { background: rgba(255, 255, 255, .2); transform: translateY(-2px); }
+        .btn.active { background: #6366f1; border-color: #6366f1; }
+        .btn-back { background: rgba(248, 113, 113, .2); border-color: rgba(248, 113, 113, .3); }
+        .controls { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+        .btn-home {
+            background: rgba(251, 191, 36, 0.2);
+            border-color: rgba(251, 191, 36, 0.3);
+            color: #fbbf24;
+        }
+        .btn-home:hover { background: rgba(251, 191, 36, 0.3); }
+        .game-header .left-group { display: flex; align-items: center; gap: 12px; }
+        .game-header .left-group .btn-home { padding: 4px 10px; font-size: 11px; }
+
+        .grid-wrapper {
+            height: calc(100vh - 60px);
+            overflow-y: auto;
+            overflow-x: hidden;
+            -webkit-overflow-scrolling: touch;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-auto-rows: minmax(140px, auto);
+            gap: 12px;
+            width: 100%;
+            padding: 12px;
+        }
+
+        /* ===== КАРТОЧКИ ===== */
+        .card {
+            position: relative;
+            border-radius: 16px;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            padding: 10px 12px;
+            cursor: pointer;
+            overflow: hidden;
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            min-height: 130px;
+            border-left: 3px solid var(--accent);
+            gap: 8px;
+        }
+        .card:hover:not(.solved) {
+            transform: translateY(-4px);
+            background: rgba(255, 255, 255, 0.07);
+            border-color: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+        }
+        .card:active { transform: scale(0.96); }
+        .card.solved { opacity: .25; pointer-events: none; filter: grayscale(.5); }
+        .card.target-pulse { animation: targetGlow 1.5s ease infinite; }
+        @keyframes targetGlow {
+            0%, 100% { box-shadow: 0 0 15px color-mix(in srgb, var(--accent) 20%, transparent); }
+            50% { box-shadow: 0 0 30px color-mix(in srgb, var(--accent) 50%, transparent); }
+        }
+
+        .c1 { --accent: #f472b6; }
+        .c2 { --accent: #60a5fa; }
+        .c3 { --accent: #34d399; }
+        .c4 { --accent: #fbbf24; }
+        .c5 { --accent: #a78bfa; }
+        .c6 { --accent: #f87171; }
+        .c7 { --accent: #2dd4bf; }
+        .c8 { --accent: #fb923c; }
+        .c9 { --accent: #e879f9; }
+        .c10 { --accent: #38bdf8; }
+        .c11 { --accent: #4ade80; }
+        .c12 { --accent: #facc15; }
+        .c13 { --accent: #c084fc; }
+        .c14 { --accent: #fb7185; }
+        .c15 { --accent: #22d3ee; }
+
+        .emoji-col {
+            flex: 0 0 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: clamp(28px, 4vh, 40px);
+            animation: float 3s infinite ease-in-out;
+            z-index: 10;
+        }
+        .center-col {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 70px;
+            position: relative;
+            padding: 4px 0;
+        }
+        .hanzi {
+            font-size: clamp(30px, 5vh, 48px);
+            font-weight: 800;
+            line-height: 1.1;
+            color: #f1f5f9;
+            text-shadow: 0 0 15px rgba(255, 255, 255, 0.15);
+            transition: opacity 0.3s ease;
+            z-index: 5;
+            text-align: center;
+        }
+        .hanzi.hidden { opacity: 0; position: absolute; pointer-events: none; }
+
+        .writer-container {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100%; height: 100%;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+            z-index: 6;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 2px;
+            background: transparent;
+            padding: 0;
+        }
+        .writer-container.active { opacity: 1; }
+        .writer-item {
+            flex: 0 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+        }
+        .writer-item canvas {
+            display: block;
+            width: 100% !important;
+            height: 100% !important;
+            background: transparent !important;
+        }
+
+        .info-col {
+            flex: 0 0 38%;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: center;
+            gap: 2px;
+            z-index: 10;
+            padding-left: 4px;
+            min-width: 0;
+        }
+        .pinyin {
+            font-size: clamp(11px, 1.4vh, 15px);
+            color: var(--accent);
+            font-weight: 800;
+            letter-spacing: 0.3px;
+            line-height: 1;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            width: 100%;
+        }
+        .russian {
+            font-size: clamp(10px, 1.2vh, 13px);
+            color: #ffffff;
+            font-weight: 600;
+            line-height: 1.2;
+            opacity: 0.9;
+            word-break: break-word;
+            overflow-wrap: break-word;
+            width: 100%;
+        }
+        .pulse {
+            position: absolute;
+            bottom: 6px; right: 6px;
+            width: 6px; height: 6px;
+            background: var(--accent);
+            border-radius: 50%;
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 20;
+            box-shadow: 0 0 8px var(--accent);
+        }
+        .card.speaking .pulse { opacity: 1; animation: blink 1s infinite; }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-4px); }
+        }
+        @keyframes blink {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(1.3); }
+        }
+
+        /* ===== ДИКТАНТ ===== */
+        .draw-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 999999;
+            background: #0a0f1e;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity .3s;
+            overflow: hidden;
+        }
+        .draw-overlay.open { opacity: 1; pointer-events: auto; }
+        .draw-header {
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 20px;
+            z-index: 1000000;
+        }
+        .draw-task { font-size: 18px; font-weight: 700; color: #fff; }
+        .draw-task small { display: block; font-size: 12px; color: #94a3b8; font-weight: 600; margin-top: 2px; }
+        .draw-close {
+            width: 40px; height: 40px;
+            border-radius: 50%;
+            border: none;
+            background: rgba(255, 255, 255, .1);
+            color: #fff;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all .2s;
+        }
+        .draw-close:hover { background: rgba(248, 113, 113, .3); }
+        .draw-canvas-area {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000000;
+            touch-action: none;
+            max-height: calc(100vh - 100px);
+            overflow-y: auto;
+            padding: 10px;
+        }
+        .draw-canvas-wrapper {
+            position: relative;
+            border-radius: 16px;
+            border: 2px dashed rgba(255, 255, 255, .15);
+            background: rgba(255, 255, 255, .02);
+            touch-action: none;
+            flex-shrink: 0;
+        }
+        .draw-canvas-wrapper.show-guide { border-color: rgba(99, 102, 241, .4); }
+        .draw-canvas-wrapper.active-char {
+            border-color: rgba(255, 255, 255, .4);
+            box-shadow: 0 0 25px rgba(99, 102, 241, .25);
+        }
+        .draw-canvas-wrapper.done-char { opacity: .5; border-color: rgba(74, 222, 128, .3); }
+        .draw-canvas-wrapper .writer-slot { position: relative; z-index: 1; width: 100%; height: 100%; }
+        .draw-canvas-wrapper .writer-slot svg { filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.5)); }
+        .draw-canvas-wrapper.active-char .writer-slot svg {
+            filter: drop-shadow(0 0 12px rgba(99, 102, 241, 0.6)) drop-shadow(0 0 5px rgba(255, 255, 255, 0.7));
+        }
+        .char-indicator {
+            position: absolute;
+            top: -22px; left: 0; right: 0;
+            text-align: center;
+            font-size: 12px;
+            color: #64748b;
+            font-weight: 600;
+        }
+        .char-indicator.active-ind { color: #fff; font-weight: 800; }
+        .draw-feedback {
+            position: absolute;
+            bottom: 15px; left: 0; right: 0;
+            text-align: center;
+            font-size: 16px;
+            font-weight: 700;
+            opacity: 0;
+            transition: opacity .3s;
+            pointer-events: none;
+            z-index: 1000000;
+        }
+        .draw-feedback.success { color: #4ade80; opacity: 1; }
+        .draw-feedback.error { color: #f87171; opacity: 1; }
+
+        /* ===== ВИКТОРИНА ===== */
+        .quiz-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 999999;
+            background: #0a0f1e;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity .3s;
+            overflow: hidden;
+        }
+        .quiz-overlay.open { opacity: 1; pointer-events: auto; }
+        .quiz-header {
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 20px;
+            z-index: 1000000;
+        }
+        .quiz-listen-btn {
+            width: 60px; height: 60px;
+            border-radius: 50%;
+            border: 2px solid rgba(99, 102, 241, .4);
+            background: rgba(99, 102, 241, .15);
+            color: #fff;
+            font-size: 28px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all .2s;
+            margin-bottom: 20px;
+        }
+        .quiz-listen-btn:hover { background: rgba(99, 102, 241, .25); transform: scale(1.1); }
+        .quiz-listen-btn:active { transform: scale(.9); }
+        .quiz-hanzi-display {
+            font-size: clamp(60px, 15vh, 120px);
+            font-weight: 900;
+            color: #f1f5f9;
+            text-shadow: 0 0 30px rgba(99, 102, 241, .3);
+            margin-bottom: 30px;
+            line-height: 1;
+        }
+        .quiz-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            width: min(90vw, 400px);
+        }
+        .quiz-option {
+            padding: 16px 12px;
+            border-radius: 14px;
+            border: 2px solid rgba(255, 255, 255, .1);
+            background: rgba(255, 255, 255, .04);
+            color: #fff;
+            font-size: clamp(14px, 2vh, 18px);
+            font-weight: 700;
+            cursor: pointer;
+            transition: all .2s;
+            text-align: center;
+            line-height: 1.2;
+        }
+        .quiz-option:hover {
+            background: rgba(255, 255, 255, .08);
+            border-color: rgba(255, 255, 255, .2);
+            transform: translateY(-2px);
+        }
+        .quiz-option:active { transform: scale(.95); }
+        .quiz-option.correct { background: rgba(74, 222, 128, .2); border-color: #4ade80; color: #4ade80; }
+        .quiz-option.wrong {
+            background: rgba(248, 113, 113, .2);
+            border-color: #f87171;
+            color: #f87171;
+            animation: shake .4s ease;
+        }
+        .quiz-option.disabled { pointer-events: none; opacity: .5; }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-6px); }
+            75% { transform: translateX(6px); }
+        }
+        .quiz-feedback {
+            position: absolute;
+            bottom: 20px; left: 0; right: 0;
+            text-align: center;
+            font-size: 16px;
+            font-weight: 700;
+            opacity: 0;
+            transition: opacity .3s;
+            pointer-events: none;
+        }
+        .quiz-feedback.success { color: #4ade80; opacity: 1; }
+        .quiz-feedback.error { color: #f87171; opacity: 1; }
+
+        .offline-badge {
+            position: fixed;
+            bottom: 10px; right: 10px;
+            background: rgba(74, 222, 128, 0.15);
+            border: 1px solid rgba(74, 222, 128, 0.3);
+            color: #4ade80;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 10px;
+            font-weight: 600;
+            z-index: 999;
+            backdrop-filter: blur(10px);
+            display: none;
+        }
+        .offline-badge.show { display: block; }
+
+        .lock-notice {
+            text-align: center;
+            padding: 20px;
+            color: #94a3b8;
+            font-size: 14px;
+            grid-column: 1/-1;
+        }
+        .lock-notice span { color: #fbbf24; }
+
+        @media(max-width:768px) {
+            .grid {
+                grid-template-columns: repeat(2, 1fr);
+                grid-auto-rows: minmax(120px, auto);
+                gap: 10px;
+                padding: 10px;
+            }
+            .card { min-height: 110px; padding: 8px 10px; gap: 6px; }
+            .emoji-col { flex: 0 0 34px; font-size: clamp(22px, 3.5vh, 32px); }
+            .hanzi { font-size: clamp(24px, 4.5vh, 38px); }
+            .info-col { flex: 0 0 35%; }
+            .pinyin { font-size: clamp(10px, 1.3vh, 13px); }
+            .russian { font-size: clamp(9px, 1.1vh, 12px); }
+            .deck-grid { grid-template-columns: repeat(2, 1fr); }
+            .search-results { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
+        }
+        @media(max-width:480px) {
+            .grid {
+                grid-template-columns: repeat(2, 1fr);
+                grid-auto-rows: minmax(105px, auto);
+                gap: 6px;
+                padding: 6px;
+            }
+            .card { min-height: 100px; padding: 6px 8px; gap: 4px; border-radius: 12px; }
+            .emoji-col { flex: 0 0 28px; font-size: clamp(18px, 3vh, 26px); }
+            .center-col { min-height: 50px; }
+            .hanzi { font-size: clamp(20px, 3.8vh, 30px); }
+            .info-col { flex: 0 0 32%; }
+            .pinyin { font-size: clamp(8px, 1.1vh, 11px); }
+            .russian { font-size: clamp(7px, 1vh, 10px); }
+            .writer-item { max-width: 50px; max-height: 50px; }
+            .search-results { grid-template-columns: repeat(2, 1fr); }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ===== ЭКРАН ВЫБОРА ===== -->
+    <div class="deck-selector" id="deckSelector">
+        <h1>📚 HSK — Слова по уровням</h1>
+        <div class="subtitle">Выберите уровень и тему</div>
+
+        <!-- 🔍 ПОИСК -->
+        <div class="search-wrapper">
+            <input type="text" id="searchInput" placeholder="Поиск: 我, wǒ, я..." autocomplete="off">
+            <button class="search-clear" id="searchClear">✕</button>
+        </div>
+        <div class="search-results" id="searchResults"></div>
+        <!-- /ПОИСК -->
+
+        <div class="level-tabs" id="levelTabs"></div>
+        <div class="deck-grid" id="deckGrid"></div>
+    </div>
+
+    <!-- ===== ИГРОВОЙ ЭКРАН ===== -->
+    <div class="game-header" id="gameHeader" style="display:none">
+        <div class="left-group">
+            <button class="btn btn-home" id="btnHome">🏠 Меню</button>
+            <div>
+                <div class="score-board">Счёт: <span id="score">0</span></div>
+                <div class="mode-label" id="modeLabel">📖 Обучение</div>
+            </div>
+        </div>
+        <div class="controls">
+            <button class="btn active" data-mode="learn">📖 Учить</button>
+            <button class="btn" data-mode="quiz">✏️ Диктант</button>
+            <button class="btn" data-mode="trivia">🎯 Викторина</button>
+        </div>
+    </div>
+
+    <div class="grid-wrapper" id="gridWrapper" style="display:none">
+        <div class="grid" id="grid"></div>
+    </div>
+
+    <!-- ===== ДИКТАНТ ===== -->
+    <div class="draw-overlay" id="drawOverlay">
+        <div class="draw-header">
+            <div class="draw-task" id="drawTask">Нарисуй<small></small></div>
+            <button class="draw-close" id="drawClose">✕</button>
+        </div>
+        <div class="draw-canvas-area" id="canvasArea"></div>
+        <div class="draw-feedback" id="drawFeedback"></div>
+    </div>
+
+    <!-- ===== ВИКТОРИНА ===== -->
+    <div class="quiz-overlay" id="quizOverlay">
+        <div class="quiz-header">
+            <div class="draw-task" id="quizTask">Викторина<small></small></div>
+            <button class="draw-close" id="quizClose">✕</button>
+        </div>
+        <button class="quiz-listen-btn" id="quizListen">🔊</button>
+        <div class="quiz-hanzi-display" id="quizHanzi"></div>
+        <div class="quiz-options" id="quizOptions"></div>
+        <div class="quiz-feedback" id="quizFeedback"></div>
+    </div>
+
+    <div class="offline-badge" id="offlineBadge">📶 Офлайн</div>
+
+    <script>
+        // ================================================================
+        // ПРОВЕРКА ЗАГРУЗКИ DATA.JS
+        // ================================================================
+        if (typeof HSK_DATA === 'undefined') {
+            document.body.innerHTML = `
+                <div style="display:flex;align-items:center;justify-content:center;height:100vh;flex-direction:column;gap:20px;padding:20px;text-align:center;">
+                    <div style="font-size:48px;">⚠️</div>
+                    <h2 style="color:#f87171;">Ошибка загрузки данных</h2>
+                    <p style="color:#94a3b8;max-width:400px;">Файл <strong>data.js</strong> не найден или содержит ошибку.<br>Убедитесь, что он лежит рядом с index.html.</p>
+                    <button onclick="location.reload()" style="padding:10px 30px;background:#6366f1;color:#fff;border:none;border-radius:10px;font-size:16px;cursor:pointer;">Перезагрузить</button>
+                </div>
+            `;
+            throw new Error('HSK_DATA not loaded');
+        }
+
+        // ================================================================
+        // ОСНОВНАЯ ЛОГИКА
+        // ================================================================
+        let currentLevel = 'hsk1';
+        let currentDeck = null;
+        let score = 0;
+        let currentMode = 'learn';
+        let currentTargetIndex = null;
+        let activeWriters = [];
+        let totalMistakes = 0;
+        let solvedSet = new Set();
+        let isOverlayOpen = false;
+        let isTransitioning = false;
+
+        const deckSelector = document.getElementById('deckSelector');
+        const levelTabs = document.getElementById('levelTabs');
+        const deckGrid = document.getElementById('deckGrid');
+        const gameHeader = document.getElementById('gameHeader');
+        const gridWrapper = document.getElementById('gridWrapper');
+        const gridEl = document.getElementById('grid');
+        const scoreEl = document.getElementById('score');
+        const modeLabel = document.getElementById('modeLabel');
+        const drawOverlay = document.getElementById('drawOverlay');
+        const drawTask = document.getElementById('drawTask');
+        const canvasArea = document.getElementById('canvasArea');
+        const drawFeedback = document.getElementById('drawFeedback');
+        const drawClose = document.getElementById('drawClose');
+        const quizOverlay = document.getElementById('quizOverlay');
+        const quizTask = document.getElementById('quizTask');
+        const quizHanzi = document.getElementById('quizHanzi');
+        const quizOptions = document.getElementById('quizOptions');
+        const quizFeedback = document.getElementById('quizFeedback');
+        const quizClose = document.getElementById('quizClose');
+        const quizListen = document.getElementById('quizListen');
+        const btnHome = document.getElementById('btnHome');
+        const modeButtons = document.querySelectorAll('[data-mode]');
+        const offlineBadge = document.getElementById('offlineBadge');
+
+        // Элементы поиска
+        const searchInput = document.getElementById('searchInput');
+        const searchClear = document.getElementById('searchClear');
+        const searchResults = document.getElementById('searchResults');
+
+        if (!navigator.onLine) offlineBadge.classList.add('show');
+        window.addEventListener('online', () => offlineBadge.classList.remove('show'));
+        window.addEventListener('offline', () => offlineBadge.classList.add('show'));
+
+        // ================================================================
+        // ПОИСК
+        // ================================================================
+        function normalizeStr(str) {
+            return (str || '').toLowerCase().replace(/[\s\u0300-\u036f]/g, '');
+        }
+
+        function performSearch(query) {
+            const q = normalizeStr(query.trim());
+            if (!q) {
+                searchResults.classList.remove('active');
+                searchResults.innerHTML = '';
+                deckSelector.classList.remove('search-active');
+                searchClear.classList.remove('visible');
+                return;
+            }
+
+            searchClear.classList.add('visible');
+            const results = [];
+
+            Object.keys(HSK_DATA).forEach(levelKey => {
+                const level = HSK_DATA[levelKey];
+                if (!level || !level.decks) return;
+                level.decks.forEach(deck => {
+                    if (!deck.words) return;
+                    deck.words.forEach((word, wordIdx) => {
+                        const hanziNorm = normalizeStr(word.hanzi);
+                        const pinyinNorm = normalizeStr(word.pinyin);
+                        const ruNorm = normalizeStr(word.ru);
+                        if (hanziNorm.includes(q) || pinyinNorm.includes(q) || ruNorm.includes(q)) {
+                            results.push({
+                                hanzi: word.hanzi,
+                                pinyin: word.pinyin,
+                                ru: word.ru,
+                                em: word.em || '📝',
+                                levelLabel: level.label || levelKey,
+                                deckId: deck.id,
+                                deckTitle: deck.title,
+                                deckCls: deck.cls,
+                                levelKey: levelKey,
+                                deckRef: deck
+                            });
+                        }
+                    });
+                });
+            });
+
+            renderSearchResults(results, query.trim());
+        }
+
+        function highlightMatch(text, query) {
+            if (!query) return text;
+            const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const regex = new RegExp(`(${escaped})`, 'gi');
+            return text.replace(regex, '<mark style="background:rgba(99,102,241,.35);color:#fff;border-radius:2px;padding:0 1px;">$1</mark>');
+        }
+
+        function renderSearchResults(results, query) {
+            deckSelector.classList.add('search-active');
+            searchResults.classList.add('active');
+
+            if (!results.length) {
+                searchResults.innerHTML = `<div class="search-empty">😔 Ничего не найдено по запросу «${query}»</div>`;
+                return;
+            }
+
+            const limited = results.slice(0, 60);
+            searchResults.innerHTML = limited.map(r => `
+                <div class="search-card ${r.deckCls || ''}" 
+                     data-level="${r.levelKey}" 
+                     data-deck-id="${r.deckId}">
+                    <div class="sc-emoji">${r.em}</div>
+                    <div class="sc-hanzi">${highlightMatch(r.hanzi, query)}</div>
+                    <div class="sc-pinyin">${highlightMatch(r.pinyin, query)}</div>
+                    <div class="sc-ru">${highlightMatch(r.ru, query)}</div>
+                    <div class="sc-badge">${r.levelLabel} · ${r.deckTitle}</div>
+                </div>
+            `).join('');
+
+            if (results.length > 60) {
+                searchResults.innerHTML += `<div class="search-empty">…и ещё ${results.length - 60} результатов. Уточните запрос.</div>`;
+            }
+
+            searchResults.querySelectorAll('.search-card').forEach(card => {
+                card.addEventListener('click', () => {
+                    const levelKey = card.dataset.level;
+                    const deckId = parseInt(card.dataset.deckId, 10);
+                    const level = HSK_DATA[levelKey];
+                    if (!level || !level.decks) return;
+                    const deck = level.decks.find(d => d.id === deckId);
+                    if (!deck) return;
+
+                    searchInput.value = '';
+                    performSearch('');
+                    currentLevel = levelKey;
+                    renderLevelTabs();
+                    openDeck(deck);
+                });
+            });
+        }
+
+        let searchDebounce = null;
+        searchInput.addEventListener('input', () => {
+            clearTimeout(searchDebounce);
+            searchDebounce = setTimeout(() => performSearch(searchInput.value), 150);
+        });
+
+        searchClear.addEventListener('click', () => {
+            searchInput.value = '';
+            performSearch('');
+            searchInput.focus();
+        });
+
+        // Закрытие поиска при Escape
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && searchInput.value) {
+                searchInput.value = '';
+                performSearch('');
+            }
+        });
+
+        // ================================================================
+        // НАВИГАЦИЯ
+        // ================================================================
+        function goToMainMenu() {
+            if (isOverlayOpen) closeAllOverlays();
+            gameHeader.style.display = 'none';
+            gridWrapper.style.display = 'none';
+            gridEl.innerHTML = '';
+            currentDeck = null;
+            solvedSet.clear();
+            score = 0;
+            scoreEl.textContent = '0';
+            currentTargetIndex = null;
+            deckSelector.classList.remove('hidden');
+            if (window.speechSynthesis) window.speechSynthesis.cancel();
+        }
+        btnHome.addEventListener('click', goToMainMenu);
+
+        function isLevelReady(levelKey) {
+            const level = HSK_DATA[levelKey];
+            if (!level || !level.decks) return false;
+            return level.decks.some(deck => deck.words && deck.words.length > 0);
+        }
+
+        function getLevelStatus(levelKey) {
+            const ready = isLevelReady(levelKey);
+            return {
+                ready,
+                label: HSK_DATA[levelKey]?.label || levelKey,
+                totalWords: HSK_DATA[levelKey]?.decks?.reduce((sum, d) => sum + (d.words?.length || 0), 0) || 0
+            };
+        }
+
+        function renderLevelTabs() {
+            levelTabs.innerHTML = '';
+            Object.keys(HSK_DATA).forEach(key => {
+                const status = getLevelStatus(key);
+                const isActive = key === currentLevel;
+                const isLocked = !status.ready;
+                const tab = document.createElement('div');
+                tab.className = 'level-tab' + (isActive ? ' active' : '') + (isLocked ? ' locked' : '');
+                let label = status.label;
+                label += status.ready && status.totalWords > 0 ? ` (${status.totalWords})` : ' 🔒';
+                tab.textContent = label;
+                tab.dataset.level = key;
+                tab.addEventListener('click', () => {
+                    if (isLocked) return;
+                    if (isOverlayOpen) closeAllOverlays();
+                    currentLevel = key;
+                    renderLevelTabs();
+                    renderDeckSelector();
+                });
+                levelTabs.appendChild(tab);
+            });
+        }
+
+        function renderDeckSelector() {
+            deckGrid.innerHTML = '';
+            const level = HSK_DATA[currentLevel];
+            if (!level) { deckGrid.innerHTML = '<div class="lock-notice">⚠️ Уровень не найден</div>'; return; }
+            const decks = level.decks || [];
+            if (!decks.length || !decks.some(d => d.words && d.words.length > 0)) {
+                deckGrid.innerHTML = `<div class="lock-notice">📭 Слова для <span>${level.label}</span> пока не добавлены</div>`;
+                return;
+            }
+            decks.forEach(deck => {
+                if (!deck.words || !deck.words.length) return;
+                const card = document.createElement('div');
+                card.className = 'deck-card ' + deck.cls;
+                const preview = deck.words.slice(0, 6).map(w => w.hanzi).join(' ');
+                card.innerHTML =
+                    `<div class="de">${deck.emoji || '📚'}</div><div class="dt">${deck.title}</div><div class="dn">${deck.words.length} слов</div><div class="dp">${preview}</div>`;
+                card.addEventListener('click', () => openDeck(deck));
+                deckGrid.appendChild(card);
+            });
+        }
+
+        function openDeck(deck) {
+            currentDeck = deck;
+            solvedSet.clear();
+            score = 0;
+            scoreEl.textContent = '0';
+            currentTargetIndex = null;
+            currentMode = 'learn';
+            modeButtons.forEach(b => b.classList.toggle('active', b.dataset.mode === 'learn'));
+            modeLabel.textContent = '📖 ' + deck.emoji + ' ' + deck.title;
+            deckSelector.classList.add('hidden');
+            setTimeout(() => {
+                gameHeader.style.display = 'flex';
+                gridWrapper.style.display = 'block';
+                gridWrapper.scrollTop = 0;
+                renderCards();
+            }, 400);
+        }
+
+        // ================================================================
+        // РЕНДЕРИНГ КАРТОЧЕК
+        // ================================================================
+        function splitHanzi(hanzi) {
+            return hanzi.split('').filter(ch => ch.trim() !== '');
+        }
+
+        function renderCards() {
+            gridEl.innerHTML = '';
+            if (!currentDeck || !currentDeck.words) return;
+            const ac = ['c1','c2','c3','c4','c5','c6','c7','c8','c9','c10','c11','c12','c13','c14','c15'];
+            currentDeck.words.forEach((item, index) => {
+                const card = document.createElement('div');
+                card.className = 'card ' + ac[index % 15];
+                card.dataset.index = index;
+
+                const chars = splitHanzi(item.hanzi);
+                const isMulti = chars.length > 1;
+
+                let hanziHTML = '';
+                if (isMulti) {
+                    hanziHTML = `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0px;height:100%;width:100%;">`;
+                    chars.forEach(ch => {
+                        hanziHTML += `<div class="hanzi" data-char="${ch}" style="line-height:1;">${ch}</div>`;
+                    });
+                    hanziHTML += `</div>`;
+                } else {
+                    hanziHTML = `<div class="hanzi" data-char="${chars[0]}">${chars[0]}</div>`;
+                }
+
+                card.innerHTML = `
+                    <div class="emoji-col">${item.em || '📝'}</div>
+                    <div class="center-col">
+                        ${hanziHTML}
+                        <div class="writer-container"></div>
+                    </div>
+                    <div class="info-col">
+                        <div class="pinyin">${item.pinyin}</div>
+                        <div class="russian">${item.ru}</div>
+                    </div>
+                    <div class="pulse"></div>
+                `;
+
+                let isAnimating = false;
+
+                card.addEventListener('click', () => {
+                    if (!card.classList.contains('speaking')) {
+                        card.classList.add('speaking');
+                        const synth = window.speechSynthesis;
+                        synth.cancel();
+                        const zhSpeech = new SpeechSynthesisUtterance(item.hanzi);
+                        zhSpeech.lang = 'zh-CN';
+                        zhSpeech.rate = 0.7;
+                        zhSpeech.onend = () => {
+                            const ruSpeech = new SpeechSynthesisUtterance(item.ru);
+                            ruSpeech.lang = 'ru-RU';
+                            ruSpeech.rate = 0.9;
+                            ruSpeech.onend = () => { card.classList.remove('speaking'); };
+                            ruSpeech.onerror = () => { card.classList.remove('speaking'); };
+                            synth.speak(ruSpeech);
+                        };
+                        zhSpeech.onerror = () => card.classList.remove('speaking');
+                        synth.speak(zhSpeech);
+                    }
+
+                    if (isAnimating) return;
+                    isAnimating = true;
+
+                    const hanziEls = card.querySelectorAll('.hanzi');
+                    const writerContainer = card.querySelector('.writer-container');
+
+                    hanziEls.forEach(el => el.classList.add('hidden'));
+                    writerContainer.innerHTML = '';
+                    writerContainer.classList.add('active');
+
+                    const rect = card.getBoundingClientRect();
+                    const containerSize = Math.min(rect.width * 0.35, rect.height * 0.55, 80);
+
+                    const charCount = chars.length;
+                    let itemSize;
+                    if (charCount > 1) {
+                        itemSize = Math.min(containerSize / charCount - 2, 55);
+                    } else {
+                        itemSize = Math.min(containerSize, 70);
+                    }
+                    itemSize = Math.max(itemSize, 28);
+
+                    const writers = [];
+                    chars.forEach((ch) => {
+                        const wrapper = document.createElement('div');
+                        wrapper.className = 'writer-item';
+                        wrapper.style.width = itemSize + 'px';
+                        wrapper.style.height = itemSize + 'px';
+                        wrapper.style.flexShrink = '0';
+                        wrapper.style.background = 'transparent';
+                        wrapper.style.border = 'none';
+                        wrapper.style.boxShadow = 'none';
+                        writerContainer.appendChild(wrapper);
+                        try {
+                            const writer = HanziWriter.create(wrapper, ch, {
+                                width: itemSize,
+                                height: itemSize,
+                                padding: 2,
+                                showOutline: true,
+                                showCharacter: false,
+                                strokeAnimationSpeed: 1.5,
+                                delayBetweenStrokes: 120,
+                                strokeColor: '#ffffff',
+                                outlineColor: 'rgba(255,255,255,0.08)',
+                                strokeWidth: Math.max(2, itemSize * 0.08)
+                            });
+                            writers.push(writer);
+                        } catch (e) { writers.push(null); }
+                    });
+
+                    let currentIdx = 0;
+                    function animateNext() {
+                        if (currentIdx >= writers.length) {
+                            setTimeout(() => {
+                                writerContainer.classList.remove('active');
+                                hanziEls.forEach(el => el.classList.remove('hidden'));
+                                isAnimating = false;
+                            }, 300);
+                            return;
+                        }
+                        const writer = writers[currentIdx];
+                        if (writer) {
+                            writer.animateCharacter({
+                                onComplete: () => { currentIdx++; setTimeout(animateNext, 100); }
+                            });
+                        } else {
+                            currentIdx++;
+                            setTimeout(animateNext, 100);
+                        }
+                    }
+                    setTimeout(animateNext, 200);
+                });
+
+                gridEl.appendChild(card);
+            });
+        }
+
+        // ================================================================
+        // РЕЖИМЫ
+        // ================================================================
+        function setMode(mode) {
+            if (isTransitioning) return;
+            currentMode = mode;
+            modeButtons.forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
+            solvedSet.clear();
+            score = 0;
+            scoreEl.textContent = '0';
+            currentTargetIndex = null;
+            closeAllOverlays();
+            document.querySelectorAll('.card').forEach(c => c.classList.remove('solved', 'target-pulse'));
+            const labels = { learn: '📖 Обучение', quiz: '✏️ Диктант', trivia: '🎯 Викторина' };
+            modeLabel.textContent = labels[mode] + ' — ' + (currentDeck ? currentDeck.title : '');
+            if (mode !== 'learn') scheduleNextTarget();
+        }
+
+        modeButtons.forEach(btn => btn.addEventListener('click', function() { setMode(this.dataset.mode); }));
+
+        function scheduleNextTarget() {
+            if (isTransitioning || isOverlayOpen) return;
+            isTransitioning = true;
+            setTimeout(() => { isTransitioning = false; pickNextTarget(); }, 300);
+        }
+
+        function pickNextTarget() {
+            if (isOverlayOpen || isTransitioning || !currentDeck) return;
+            document.querySelectorAll('.card').forEach(c => c.classList.remove('target-pulse'));
+            const unsolved = currentDeck.words.map((_, i) => i).filter(i => !solvedSet.has(i));
+            if (!unsolved.length) {
+                modeLabel.textContent = '🎉 ' + currentDeck.title + ' пройдена! Счёт: ' + score;
+                return;
+            }
+            currentTargetIndex = unsolved[Math.floor(Math.random() * unsolved.length)];
+            const card = document.querySelector('.card[data-index="' + currentTargetIndex + '"]');
+            if (card) {
+                card.classList.add('target-pulse');
+                card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+            speakChinese(currentDeck.words[currentTargetIndex].hanzi);
+            setTimeout(() => {
+                if (!isOverlayOpen && currentMode !== 'learn') {
+                    if (currentMode === 'quiz') openDrawOverlay(currentTargetIndex);
+                    else if (currentMode === 'trivia') openQuizOverlay(currentTargetIndex);
+                }
+            }, 800);
+        }
+
+        function speakChinese(text) {
+            try {
+                const synth = window.speechSynthesis;
+                if (!synth) return;
+                synth.cancel();
+                const u = new SpeechSynthesisUtterance(text.replace(/'/g, ''));
+                u.lang = 'zh-CN';
+                u.rate = 0.8;
+                synth.speak(u);
+            } catch (e) {}
+        }
+
+        function speakRussian(text) {
+            try {
+                const synth = window.speechSynthesis;
+                if (!synth) return;
+                const u = new SpeechSynthesisUtterance(text);
+                u.lang = 'ru-RU';
+                u.rate = 0.9;
+                synth.speak(u);
+            } catch (e) {}
+        }
+
+        // ================================================================
+        // ДИКТАНТ
+        // ================================================================
+        function calcSize(charCount) {
+            const vh = window.innerHeight, vw = window.innerWidth;
+            const available = vh - 60 - 50 - (charCount - 1) * 10 - 20;
+            if (charCount === 1) return Math.min(Math.floor(available), Math.floor(vw * .88));
+            if (charCount === 2) return Math.min(Math.floor(available / 2), Math.floor(vw * .85));
+            return Math.min(Math.floor(available / 3), Math.floor(vw * .82));
+        }
+
+        function openDrawOverlay(index) {
+            if (isOverlayOpen || !currentDeck) return;
+            isOverlayOpen = true;
+            totalMistakes = 0;
+            const item = currentDeck.words[index];
+            const chars = item.hanzi.split('');
+            drawTask.innerHTML = 'Нарисуй: ' + item.hanzi + '<small>' + item.pinyin + ' — ' + item.ru + '</small>';
+            drawFeedback.className = 'draw-feedback';
+            drawFeedback.textContent = '';
+            const size = calcSize(chars.length);
+            canvasArea.innerHTML = '';
+            chars.forEach((ch, i) => {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'draw-canvas-wrapper show-guide';
+                wrapper.style.width = size + 'px';
+                wrapper.style.height = size + 'px';
+                wrapper.id = 'cw-' + i;
+                if (chars.length > 1) {
+                    const ind = document.createElement('div');
+                    ind.className = 'char-indicator';
+                    ind.id = 'ind-' + i;
+                    ind.textContent = (i + 1) + '/' + chars.length + '  ' + ch;
+                    wrapper.appendChild(ind);
+                }
+                const slot = document.createElement('div');
+                slot.className = 'writer-slot';
+                slot.id = 'ws-' + i;
+                wrapper.appendChild(slot);
+                canvasArea.appendChild(wrapper);
+            });
+            drawOverlay.classList.add('open');
+            requestAnimationFrame(() => requestAnimationFrame(() => startSequentialQuiz(chars, 0, size)));
+        }
+
+        function startSequentialQuiz(chars, charIndex, size) {
+            if (charIndex >= chars.length) {
+                const bonus = Math.max(1, 5 - totalMistakes);
+                score += bonus;
+                scoreEl.textContent = score;
+                drawFeedback.textContent = '✓ Отлично! +' + bonus;
+                drawFeedback.className = 'draw-feedback success';
+                solvedSet.add(currentTargetIndex);
+                const card = document.querySelector('.card[data-index="' + currentTargetIndex + '"]');
+                if (card) { card.classList.remove('target-pulse'); card.classList.add('solved'); }
+                setTimeout(() => { closeDrawOverlay(); scheduleNextTarget(); }, 1200);
+                return;
+            }
+            document.querySelectorAll('.draw-canvas-wrapper').forEach((el, i) => {
+                el.classList.remove('active-char', 'done-char');
+                if (i < charIndex) el.classList.add('done-char');
+                if (i === charIndex) el.classList.add('active-char');
+            });
+            document.querySelectorAll('.char-indicator').forEach((el, i) => el.classList.toggle('active-ind', i === charIndex));
+            const slot = document.getElementById('ws-' + charIndex);
+            if (!slot) { startSequentialQuiz(chars, charIndex + 1, size); return; }
+            slot.innerHTML = '';
+            try {
+                if (typeof HanziWriter === 'undefined') {
+                    setTimeout(() => startSequentialQuiz(chars, charIndex + 1, size), 300);
+                    return;
+                }
+                const dw = Math.max(14, Math.floor(size * 0.1));
+                const writer = HanziWriter.create(slot, chars[charIndex], {
+                    width: size, height: size,
+                    padding: Math.max(10, Math.floor(size * .08)),
+                    showOutline: true, showCharacter: false,
+                    strokeAnimationSpeed: 1, delayBetweenStrokes: 200,
+                    strokeColor: '#ffffff', outlineColor: 'rgba(255,255,255,0.25)',
+                    drawingWidth: dw, highlightOnComplete: true,
+                    highlightColor: '#4ade80', showHintAfterMisses: 3
+                });
+                activeWriters.push(writer);
+                writer.quiz({
+                    onMistake: function() {
+                        totalMistakes++;
+                        drawFeedback.textContent = '✗ Неверный штрих';
+                        drawFeedback.className = 'draw-feedback error';
+                        setTimeout(() => drawFeedback.className = 'draw-feedback', 800);
+                    },
+                    onCorrectStroke: function() { drawFeedback.className = 'draw-feedback'; },
+                    onComplete: function() { setTimeout(() => startSequentialQuiz(chars, charIndex + 1, size), 400); }
+                });
+            } catch (e) { setTimeout(() => startSequentialQuiz(chars, charIndex + 1, size), 200); }
+        }
+
+        function closeDrawOverlay() {
+            isOverlayOpen = false;
+            drawOverlay.classList.remove('open');
+            destroyWriters();
+        }
+        drawClose.addEventListener('click', () => { closeDrawOverlay(); if (currentMode !== 'learn') scheduleNextTarget(); });
+
+        function destroyWriters() {
+            activeWriters.forEach(w => { try { w.cancelQuiz(); } catch (e) {} });
+            activeWriters = [];
+            totalMistakes = 0;
+            canvasArea.innerHTML = '';
+        }
+
+        // ================================================================
+        // ВИКТОРИНА
+        // ================================================================
+        function openQuizOverlay(index) {
+            if (isOverlayOpen || !currentDeck) return;
+            isOverlayOpen = true;
+            const item = currentDeck.words[index];
+            quizTask.innerHTML = 'Викторина<small>' + currentDeck.title + '</small>';
+            quizHanzi.textContent = item.hanzi;
+            quizFeedback.className = 'quiz-feedback';
+            quizFeedback.textContent = '';
+
+            let options = [item];
+            let others = currentDeck.words.filter((_, i) => i !== index);
+            while (options.length < 4 && others.length > 0) {
+                const ri = Math.floor(Math.random() * others.length);
+                options.push(others.splice(ri, 1)[0]);
+            }
+            for (let i = options.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [options[i], options[j]] = [options[j], options[i]];
+            }
+
+            quizOptions.innerHTML = '';
+            options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = 'quiz-option';
+                btn.textContent = opt.ru;
+                btn.addEventListener('click', function() { handleQuizAnswer(btn, opt, item); });
+                quizOptions.appendChild(btn);
+            });
+            quizOverlay.classList.add('open');
+            setTimeout(() => speakChinese(item.hanzi), 400);
+        }
+
+        quizListen.addEventListener('click', () => {
+            if (currentDeck && currentTargetIndex !== null) speakChinese(currentDeck.words[currentTargetIndex].hanzi);
+        });
+
+        function handleQuizAnswer(btn, selected, correct) {
+            const allBtns = quizOptions.querySelectorAll('.quiz-option');
+            allBtns.forEach(b => b.classList.add('disabled'));
+            if (selected.hanzi === correct.hanzi) {
+                btn.classList.add('correct');
+                score += 3;
+                scoreEl.textContent = score;
+                quizFeedback.textContent = '✓ Правильно! +3';
+                quizFeedback.className = 'quiz-feedback success';
+                solvedSet.add(currentTargetIndex);
+                const card = document.querySelector('.card[data-index="' + currentTargetIndex + '"]');
+                if (card) { card.classList.remove('target-pulse'); card.classList.add('solved'); }
+                setTimeout(() => { closeQuizOverlay(); scheduleNextTarget(); }, 1200);
+            } else {
+                btn.classList.add('wrong');
+                score = Math.max(0, score - 1);
+                scoreEl.textContent = score;
+                quizFeedback.textContent = '✗ Ответ: ' + correct.ru;
+                quizFeedback.className = 'quiz-feedback error';
+                allBtns.forEach(b => { if (b.textContent === correct.ru) b.classList.add('correct'); });
+                setTimeout(() => { closeQuizOverlay(); scheduleNextTarget(); }, 2000);
+            }
+        }
+
+        function closeQuizOverlay() { isOverlayOpen = false; quizOverlay.classList.remove('open'); }
+        quizClose.addEventListener('click', () => { closeQuizOverlay(); if (currentMode !== 'learn') scheduleNextTarget(); });
+
+        function closeAllOverlays() {
+            isOverlayOpen = false;
+            drawOverlay.classList.remove('open');
+            destroyWriters();
+            quizOverlay.classList.remove('open');
+        }
+
+        // ================================================================
+        // ИНИЦИАЛИЗАЦИЯ
+        // ================================================================
+        renderLevelTabs();
+        renderDeckSelector();
+
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js', { scope: '/' })
+                .then(reg => {
+                    console.log('✅ Service Worker зарегистрирован');
+                    setInterval(() => { reg.update().catch(() => {}); }, 10000);
+                    reg.addEventListener('updatefound', () => {
+                        const newWorker = reg.installing;
+                        newWorker.addEventListener('statechange', () => {
+                            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                if (confirm('📦 Доступна новая версия приложения. Обновить?')) {
+                                    window.location.reload();
+                                }
+                            }
+                        });
+                    });
+                })
+                .catch(err => console.log('⚠️ SW registration error:', err));
+        }
+    </script>
+
+</body>
+</html>
+
