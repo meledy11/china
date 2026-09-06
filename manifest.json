@@ -1,0 +1,17 @@
+{
+    "name": "HSK Слова",
+    "short_name": "HSK",
+    "description": "Изучение китайских слов HSK 1-6",
+    "start_url": "index.html",
+    "display": "standalone",
+    "background_color": "#0a0f1e",
+    "theme_color": "#6366f1",
+    "orientation": "portrait",
+    "icons": [
+        {
+            "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E📚%3C/text%3E%3C/svg%3E",
+            "sizes": "192x192",
+            "type": "image/svg+xml"
+        }
+    ]
+}
