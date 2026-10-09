@@ -64,11 +64,10 @@
             border-radius: 14px; padding: 14px 10px; cursor: pointer;
             display: flex; flex-direction: column; align-items: center; text-align: center; gap: 4px;
             background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08);
-            transition: all .2s; position: relative; overflow: hidden;
+            transition: all .2s;
         }
         .search-card:hover { transform: translateY(-3px); background: rgba(255,255,255,.08); border-color: rgba(99,102,241,.4); box-shadow: 0 8px 25px rgba(99,102,241,.15); }
-        .search-card:active { transform: scale(.96); }
-        .search-card .sc-emoji { font-size: 24px; margin-bottom: 2px; }
+        .search-card .sc-emoji { font-size: 24px; }
         .search-card .sc-hanzi { font-size: 26px; font-weight: 800; color: #f1f5f9; line-height: 1.1; }
         .search-card .sc-pinyin { font-size: 12px; color: #6366f1; font-weight: 700; }
         .search-card .sc-ru { font-size: 11px; color: #cbd5e1; line-height: 1.2; word-break: break-word; }
@@ -88,6 +87,7 @@
         .level-tab.active { background: #6366f1; color: #fff; border-color: #6366f1; box-shadow: 0 0 20px rgba(99, 102, 241, .3); }
         .level-tab:hover:not(.locked) { transform: translateY(-2px); background: rgba(255, 255, 255, .08); }
         .level-tab.locked { opacity: .4; pointer-events: none; filter: grayscale(.6); }
+
         .deck-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(155px, 1fr)); gap: 12px; width: 100%; max-width: 900px; }
         .deck-card {
             border-radius: 18px; padding: 18px 14px; cursor: pointer;
@@ -96,7 +96,6 @@
             transition: all .3s cubic-bezier(.4, 0, .2, 1); min-height: 130px;
         }
         .deck-card:hover { transform: translateY(-6px); background: rgba(255, 255, 255, .08); border-color: var(--dc); box-shadow: 0 8px 30px color-mix(in srgb, var(--dc) 25%, transparent); }
-        .deck-card:active { transform: scale(.95); }
         .deck-card .de { font-size: 34px; }
         .deck-card .dt { font-size: 14px; font-weight: 700; color: #fff; }
         .deck-card .dn { font-size: 11px; color: #94a3b8; font-weight: 600; }
@@ -130,7 +129,7 @@
         .grid-wrapper { height: calc(100vh - 60px); overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; }
 
         /* =========================================== */
-        /* ВЕРТИКАЛЬНЫЕ КАРТОЧКИ                       */
+        /* ГОРИЗОНТАЛЬНЫЕ КАРТОЧКИ (как в макете)     */
         /* =========================================== */
         .grid {
             display: grid;
@@ -142,21 +141,20 @@
 
         .card {
             position: relative;
-            border-radius: 20px;
+            border-radius: 16px;
             display: flex;
-            flex-direction: column;
+            flex-direction: row;
             align-items: center;
-            justify-content: space-between;
-            padding: 14px 10px 12px;
+            padding: 10px 14px 10px 18px;
             cursor: pointer;
             overflow: hidden;
-            background: rgba(255, 255, 255, 0.035);
+            background: rgba(255, 255, 255, 0.03);
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.08);
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            aspect-ratio: 3 / 4;
-            border-top: 4px solid var(--accent);
+            min-height: 130px;
+            border-left: 3px solid var(--accent);
         }
         .card:hover:not(.solved) {
             transform: translateY(-4px);
@@ -164,7 +162,7 @@
             border-color: rgba(255, 255, 255, 0.2);
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
         }
-        .card:active { transform: scale(0.97); }
+        .card:active { transform: scale(0.96); }
         .card.solved { opacity: .25; pointer-events: none; filter: grayscale(.5); }
         .card.target-pulse { animation: targetGlow 1.5s ease infinite; }
         @keyframes targetGlow {
@@ -176,54 +174,72 @@
         .c6 { --accent: #f87171; } .c7 { --accent: #2dd4bf; } .c8 { --accent: #fb923c; } .c9 { --accent: #e879f9; } .c10 { --accent: #38bdf8; }
         .c11 { --accent: #4ade80; } .c12 { --accent: #facc15; } .c13 { --accent: #c084fc; } .c14 { --accent: #fb7185; } .c15 { --accent: #22d3ee; }
 
-        /* Верх: эмодзи по центру, под ним иероглиф */
-        .card-top {
+        /* Левая колонка — эмодзи, пиньинь, перевод */
+        .left-info {
             display: flex;
             flex-direction: column;
-            align-items: center;
-            justify-content: flex-start;
-            gap: 6px;
-            width: 100%;
-            flex: 1;
-            min-height: 0;
-            position: relative;
-        }
-        .emoji-col {
-            flex: 0 0 auto;
-            font-size: clamp(26px, 4vh, 36px);
-            line-height: 1;
-            display: flex;
-            align-items: center;
+            align-items: flex-start;
             justify-content: center;
-            animation: float 3s infinite ease-in-out;
             z-index: 10;
+            width: 42%;
+            min-width: 0;
+            gap: 3px;
         }
-        .center-col {
+        .emoji-side {
+            font-size: clamp(18px, 3vh, 26px);
+            line-height: 1;
+            margin-bottom: 2px;
+            animation: float 3s infinite ease-in-out;
+        }
+        .pinyin {
+            font-size: clamp(11px, 1.5vh, 15px);
+            color: var(--accent);
+            font-weight: 800;
+            letter-spacing: 0.4px;
+            line-height: 1.1;
+            word-break: break-word;
+        }
+        .russian {
+            font-size: clamp(10px, 1.3vh, 13px);
+            color: #ffffff;
+            font-weight: 600;
+            line-height: 1.2;
+            opacity: 0.95;
+            word-break: break-word;
+            overflow-wrap: break-word;
+        }
+
+        /* Правая колонка — иероглиф(ы) + контейнер для анимации */
+        .hanzi-area {
+            position: relative;
             flex: 1;
+            height: 100%;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
+            min-width: 0;
+        }
+        .hanzi-stack {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0;
+            height: 100%;
             width: 100%;
-            min-height: 60px;
-            position: relative;
-            padding: 2px 0;
         }
         .hanzi {
-            font-size: clamp(40px, 8vh, 70px);
+            font-size: clamp(28px, 5vh, 46px);
             font-weight: 800;
-            line-height: 1;
+            line-height: 1.05;
             color: #f1f5f9;
             text-shadow: 0 0 15px rgba(255, 255, 255, 0.15);
             transition: opacity 0.3s ease;
             z-index: 5;
             text-align: center;
-            white-space: nowrap;
         }
         .hanzi.hidden { opacity: 0; position: absolute; pointer-events: none; }
-        .hanzi.len-3 { font-size: clamp(32px, 6vh, 54px); }
-        .hanzi.len-4 { font-size: clamp(26px, 5vh, 44px); }
-        .hanzi.len-5 { font-size: clamp(22px, 4vh, 36px); }
 
         .writer-container {
             position: absolute;
@@ -235,11 +251,10 @@
             pointer-events: none;
             z-index: 6;
             display: flex;
-            flex-direction: row;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
             gap: 2px;
-            background: transparent;
         }
         .writer-container.active { opacity: 1; }
         .writer-item {
@@ -249,7 +264,6 @@
             justify-content: center;
             background: transparent !important;
             border: none !important;
-            box-shadow: none !important;
         }
         .writer-item canvas,
         .writer-item svg {
@@ -259,58 +273,28 @@
             background: transparent !important;
         }
 
-        /* Низ: пиньинь и перевод */
-        .info-col {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: flex-end;
-            gap: 3px;
-            width: 100%;
-            min-width: 0;
-            text-align: center;
-        }
-        .pinyin {
-            font-size: clamp(12px, 1.7vh, 15px);
-            color: var(--accent);
-            font-weight: 800;
-            letter-spacing: 0.3px;
-            line-height: 1.15;
-            word-break: break-word;
-            width: 100%;
-        }
-        .russian {
-            font-size: clamp(11px, 1.5vh, 14px);
-            color: #ffffff;
-            font-weight: 600;
-            line-height: 1.2;
-            opacity: 0.9;
-            word-break: break-word;
-            overflow-wrap: break-word;
-            width: 100%;
-        }
         .pulse {
             position: absolute; bottom: 8px; right: 8px;
-            width: 8px; height: 8px;
+            width: 6px; height: 6px;
             background: var(--accent);
             border-radius: 50%;
             opacity: 0; transition: opacity 0.3s;
             z-index: 20;
-            box-shadow: 0 0 10px var(--accent);
+            box-shadow: 0 0 8px var(--accent);
         }
         .card.speaking .pulse { opacity: 1; animation: blink 1s infinite; }
 
         @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
         @keyframes blink { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(1.3); } }
 
-        /* ===== ДИКТАНТ ===== */
-        .draw-overlay {
+        /* ===== ДИКТАНТ / ВИКТОРИНА ===== */
+        .draw-overlay, .quiz-overlay {
             position: fixed; inset: 0; z-index: 999999; background: #0a0f1e;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             opacity: 0; pointer-events: none; transition: opacity .3s; overflow: hidden;
         }
-        .draw-overlay.open { opacity: 1; pointer-events: auto; }
-        .draw-header { position: absolute; top: 0; left: 0; right: 0; display: flex; justify-content: space-between; align-items: center; padding: 12px 20px; z-index: 1000000; }
+        .draw-overlay.open, .quiz-overlay.open { opacity: 1; pointer-events: auto; }
+        .draw-header, .quiz-header { position: absolute; top: 0; left: 0; right: 0; display: flex; justify-content: space-between; align-items: center; padding: 12px 20px; z-index: 1000000; }
         .draw-task { font-size: 18px; font-weight: 700; color: #fff; }
         .draw-task small { display: block; font-size: 12px; color: #94a3b8; font-weight: 600; margin-top: 2px; }
         .draw-close { width: 40px; height: 40px; border-radius: 50%; border: none; background: rgba(255, 255, 255, .1); color: #fff; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all .2s; }
@@ -321,28 +305,18 @@
         .draw-canvas-wrapper.active-char { border-color: rgba(255, 255, 255, .4); box-shadow: 0 0 25px rgba(99, 102, 241, .25); }
         .draw-canvas-wrapper.done-char { opacity: .5; border-color: rgba(74, 222, 128, .3); }
         .draw-canvas-wrapper .writer-slot { position: relative; z-index: 1; width: 100%; height: 100%; }
-        .draw-canvas-wrapper.active-char .writer-slot svg { filter: drop-shadow(0 0 12px rgba(99, 102, 241, 0.6)); }
         .char-indicator { position: absolute; top: -22px; left: 0; right: 0; text-align: center; font-size: 12px; color: #64748b; font-weight: 600; }
         .char-indicator.active-ind { color: #fff; font-weight: 800; }
         .draw-feedback { position: absolute; bottom: 15px; left: 0; right: 0; text-align: center; font-size: 16px; font-weight: 700; opacity: 0; transition: opacity .3s; pointer-events: none; z-index: 1000000; }
         .draw-feedback.success { color: #4ade80; opacity: 1; }
         .draw-feedback.error { color: #f87171; opacity: 1; }
 
-        /* ===== ВИКТОРИНА ===== */
-        .quiz-overlay {
-            position: fixed; inset: 0; z-index: 999999; background: #0a0f1e;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            opacity: 0; pointer-events: none; transition: opacity .3s; overflow: hidden;
-        }
-        .quiz-overlay.open { opacity: 1; pointer-events: auto; }
-        .quiz-header { position: absolute; top: 0; left: 0; right: 0; display: flex; justify-content: space-between; align-items: center; padding: 12px 20px; z-index: 1000000; }
         .quiz-listen-btn { width: 60px; height: 60px; border-radius: 50%; border: 2px solid rgba(99, 102, 241, .4); background: rgba(99, 102, 241, .15); color: #fff; font-size: 28px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all .2s; margin-bottom: 20px; }
         .quiz-listen-btn:hover { background: rgba(99, 102, 241, .25); transform: scale(1.1); }
         .quiz-hanzi-display { font-size: clamp(60px, 15vh, 120px); font-weight: 900; color: #f1f5f9; text-shadow: 0 0 30px rgba(99, 102, 241, .3); margin-bottom: 30px; line-height: 1; }
         .quiz-options { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: min(90vw, 400px); }
         .quiz-option { padding: 16px 12px; border-radius: 14px; border: 2px solid rgba(255, 255, 255, .1); background: rgba(255, 255, 255, .04); color: #fff; font-size: clamp(14px, 2vh, 18px); font-weight: 700; cursor: pointer; transition: all .2s; text-align: center; line-height: 1.2; }
         .quiz-option:hover { background: rgba(255, 255, 255, .08); border-color: rgba(255, 255, 255, .2); transform: translateY(-2px); }
-        .quiz-option:active { transform: scale(.95); }
         .quiz-option.correct { background: rgba(74, 222, 128, .2); border-color: #4ade80; color: #4ade80; }
         .quiz-option.wrong { background: rgba(248, 113, 113, .2); border-color: #f87171; color: #f87171; animation: shake .4s ease; }
         .quiz-option.disabled { pointer-events: none; opacity: .5; }
@@ -358,37 +332,28 @@
         .lock-notice span { color: #fbbf24; }
 
         /* ===== АДАПТИВ ===== */
+        @media(max-width:900px) {
+            .grid { grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 10px; }
+        }
         @media(max-width:768px) {
-            .grid {
-                grid-template-columns: repeat(3, 1fr);
-                gap: 8px;
-                padding: 8px;
-            }
-            .card { padding: 10px 8px 8px; border-radius: 16px; border-top-width: 3px; }
-            .emoji-col { font-size: clamp(22px, 3.2vh, 30px); }
-            .hanzi { font-size: clamp(32px, 6.5vh, 54px); }
-            .hanzi.len-3 { font-size: clamp(26px, 5.5vh, 44px); }
-            .hanzi.len-4 { font-size: clamp(22px, 4.5vh, 36px); }
-            .hanzi.len-5 { font-size: clamp(18px, 3.8vh, 30px); }
-            .pinyin { font-size: clamp(10px, 1.4vh, 13px); }
-            .russian { font-size: clamp(10px, 1.3vh, 12px); }
+            .grid { grid-template-columns: repeat(2, 1fr); gap: 8px; padding: 8px; }
+            .card { min-height: 110px; padding: 8px 10px 8px 12px; }
+            .left-info { width: 45%; }
+            .emoji-side { font-size: clamp(16px, 2.6vh, 22px); }
+            .pinyin { font-size: clamp(10px, 1.3vh, 12px); }
+            .russian { font-size: clamp(9px, 1.1vh, 11px); }
+            .hanzi { font-size: clamp(24px, 4vh, 34px); }
             .deck-grid { grid-template-columns: repeat(2, 1fr); }
             .search-results { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
         }
         @media(max-width:480px) {
-            .grid {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 6px;
-                padding: 6px;
-            }
-            .card { padding: 8px 6px 6px; border-radius: 14px; }
-            .emoji-col { font-size: clamp(20px, 3vh, 26px); }
-            .hanzi { font-size: clamp(28px, 6vh, 44px); }
-            .hanzi.len-3 { font-size: clamp(22px, 5vh, 36px); }
-            .hanzi.len-4 { font-size: clamp(18px, 4vh, 30px); }
-            .hanzi.len-5 { font-size: clamp(16px, 3.5vh, 26px); }
-            .pinyin { font-size: 11px; }
-            .russian { font-size: 11px; }
+            .grid { grid-template-columns: repeat(2, 1fr); gap: 6px; padding: 6px; }
+            .card { min-height: 100px; padding: 6px 8px 6px 10px; border-radius: 12px; }
+            .left-info { width: 48%; }
+            .emoji-side { font-size: 18px; margin-bottom: 3px; }
+            .pinyin { font-size: 10px; }
+            .russian { font-size: 9px; }
+            .hanzi { font-size: clamp(20px, 3.6vh, 28px); }
             .search-results { grid-template-columns: repeat(2, 1fr); }
         }
     </style>
@@ -455,24 +420,18 @@
     <div class="offline-badge" id="offlineBadge">📶 Офлайн</div>
 
     <script>
-        // ================================================================
-        // ПРОВЕРКА ДАННЫХ
-        // ================================================================
         if (typeof HSK_DATA === 'undefined' || !Object.keys(HSK_DATA).length) {
             document.body.innerHTML = `
                 <div style="display:flex;align-items:center;justify-content:center;height:100vh;flex-direction:column;gap:20px;padding:20px;text-align:center;">
                     <div style="font-size:48px;">⚠️</div>
                     <h2 style="color:#f87171;">Ошибка загрузки данных</h2>
-                    <p style="color:#94a3b8;max-width:400px;">Файл <strong>data.js</strong> не найден или содержит ошибку.<br>Убедитесь, что он лежит рядом с index.html.</p>
+                    <p style="color:#94a3b8;max-width:400px;">Файл <strong>data.js</strong> не найден или содержит ошибку.</p>
                     <button onclick="location.reload()" style="padding:10px 30px;background:#6366f1;color:#fff;border:none;border-radius:10px;font-size:16px;cursor:pointer;">Перезагрузить</button>
                 </div>
             `;
             throw new Error('HSK_DATA not loaded');
         }
 
-        // ================================================================
-        // СОСТОЯНИЕ
-        // ================================================================
         let currentLevel = 'hsk1';
         let currentDeck = null;
         let score = 0;
@@ -515,9 +474,7 @@
         window.addEventListener('online', () => offlineBadge.classList.remove('show'));
         window.addEventListener('offline', () => offlineBadge.classList.add('show'));
 
-        // ================================================================
-        // ПОИСК
-        // ================================================================
+        // ===== ПОИСК =====
         function normalizeStr(str) { return (str || '').toLowerCase().replace(/[\s\u0300-\u036f]/g, ''); }
 
         function performSearch(query) {
@@ -616,9 +573,7 @@
             }
         });
 
-        // ================================================================
-        // НАВИГАЦИЯ
-        // ================================================================
+        // ===== НАВИГАЦИЯ =====
         function goToMainMenu() {
             if (isOverlayOpen) closeAllOverlays();
             gameHeader.style.display = 'none';
@@ -710,9 +665,28 @@
             }, 400);
         }
 
-        // ================================================================
-        // РЕНДЕР КАРТОЧЕК (вертикальные, с рисованием)
-        // ================================================================
+        // ===== ОЗВУЧКА РУССКОГО (с разбивкой по «/») =====
+        function speakRussian(text, onEnd) {
+            const synth = window.speechSynthesis;
+            let cleaned = (text || '').replace(/[\(\[\{][^\)\]\}]*[\)\]\}]/g, '').replace(/\s+/g, ' ').trim();
+            if (!cleaned) { if (onEnd) onEnd(); return; }
+            const parts = cleaned.split('/').map(s => s.trim()).filter(s => s.length > 0);
+            if (parts.length === 0) { if (onEnd) onEnd(); return; }
+            let i = 0;
+            function next() {
+                if (i >= parts.length) { if (onEnd) onEnd(); return; }
+                let phrase = parts[i];
+                if (phrase.length === 1) phrase += '.';
+                const u = new SpeechSynthesisUtterance(phrase);
+                u.lang = 'ru-RU'; u.rate = 0.9;
+                u.onend = () => { i++; if (i < parts.length) setTimeout(next, 1200); else if (onEnd) onEnd(); };
+                u.onerror = () => { if (onEnd) onEnd(); };
+                synth.speak(u);
+            }
+            next();
+        }
+
+        // ===== РЕНДЕР КАРТОЧЕК (ГОРИЗОНТАЛЬНЫЕ) =====
         function renderCards() {
             gridEl.innerHTML = '';
             if (!currentDeck || !currentDeck.words) return;
@@ -724,23 +698,28 @@
                 card.dataset.index = index;
 
                 const chars = item.hanzi.split('').filter(ch => ch.trim() !== '');
-                const len = chars.length;
-                let hanziClass = 'hanzi';
-                if (len === 3) hanziClass += ' len-3';
-                else if (len === 4) hanziClass += ' len-4';
-                else if (len >= 5) hanziClass += ' len-5';
+
+                // Многосложные — вертикальный столбик иероглифов
+                let hanziHTML = '';
+                if (chars.length > 1) {
+                    hanziHTML = `<div class="hanzi-stack">`;
+                    chars.forEach(ch => {
+                        hanziHTML += `<div class="hanzi" data-char="${ch}">${ch}</div>`;
+                    });
+                    hanziHTML += `</div>`;
+                } else {
+                    hanziHTML = `<div class="hanzi-stack"><div class="hanzi" data-char="${chars[0]}">${chars[0]}</div></div>`;
+                }
 
                 card.innerHTML = `
-                    <div class="card-top">
-                        <div class="emoji-col">${item.em || '📝'}</div>
-                        <div class="center-col">
-                            <div class="${hanziClass}" data-char="${item.hanzi}">${item.hanzi}</div>
-                            <div class="writer-container"></div>
-                        </div>
-                    </div>
-                    <div class="info-col">
+                    <div class="left-info">
+                        <div class="emoji-side">${item.em || '📝'}</div>
                         <div class="pinyin">${item.pinyin}</div>
                         <div class="russian">${item.ru}</div>
+                    </div>
+                    <div class="hanzi-area">
+                        ${hanziHTML}
+                        <div class="writer-container"></div>
                     </div>
                     <div class="pulse"></div>
                 `;
@@ -748,7 +727,7 @@
                 let isAnimating = false;
 
                 card.addEventListener('click', () => {
-                    // Озвучка: китайский → русский
+                    // Озвучка
                     if (!card.classList.contains('speaking')) {
                         card.classList.add('speaking');
                         const synth = window.speechSynthesis;
@@ -758,12 +737,7 @@
                             zh.lang = 'zh-CN';
                             zh.rate = 0.75;
                             zh.onend = () => {
-                                const ruU = new SpeechSynthesisUtterance(item.ru);
-                                ruU.lang = 'ru-RU';
-                                ruU.rate = 0.9;
-                                ruU.onend = () => card.classList.remove('speaking');
-                                ruU.onerror = () => card.classList.remove('speaking');
-                                synth.speak(ruU);
+                                speakRussian(item.ru, () => card.classList.remove('speaking'));
                             };
                             zh.onerror = () => card.classList.remove('speaking');
                             synth.speak(zh);
@@ -772,27 +746,29 @@
                         }
                     }
 
-                    // Анимация рисования
+                    // Анимация
                     if (isAnimating) return;
                     isAnimating = true;
 
-                    const hanziEl = card.querySelector('.hanzi');
+                    const hanziEls = card.querySelectorAll('.hanzi');
                     const writerContainer = card.querySelector('.writer-container');
 
-                    hanziEl.classList.add('hidden');
+                    hanziEls.forEach(el => el.classList.add('hidden'));
                     writerContainer.innerHTML = '';
                     writerContainer.classList.add('active');
 
                     const rect = card.getBoundingClientRect();
-                    const containerSize = Math.min(rect.width * 0.75, rect.height * 0.4, 90);
+                    const areaW = rect.width * 0.55;
+                    const areaH = rect.height * 0.9;
 
+                    const charCount = chars.length;
                     let itemSize;
-                    if (chars.length > 1) {
-                        itemSize = Math.min(containerSize / chars.length - 4, 60);
+                    if (charCount > 1) {
+                        itemSize = Math.min(areaH / charCount - 4, areaW, 60);
                     } else {
-                        itemSize = Math.min(containerSize, 80);
+                        itemSize = Math.min(areaH, areaW, 80);
                     }
-                    itemSize = Math.max(itemSize, 24);
+                    itemSize = Math.max(itemSize, 22);
 
                     const writers = [];
                     chars.forEach(ch => {
@@ -812,8 +788,7 @@
                                 strokeAnimationSpeed: 1.5,
                                 delayBetweenStrokes: 120,
                                 strokeColor: '#ffffff',
-                                outlineColor: 'rgba(255,255,255,0.08)',
-                                strokeWidth: Math.max(2, itemSize * 0.08)
+                                outlineColor: 'rgba(255,255,255,0.1)'
                             });
                             writers.push(w);
                         } catch (e) { writers.push(null); }
@@ -824,15 +799,15 @@
                         if (idx >= writers.length) {
                             setTimeout(() => {
                                 writerContainer.classList.remove('active');
-                                hanziEl.classList.remove('hidden');
+                                hanziEls.forEach(el => el.classList.remove('hidden'));
                                 isAnimating = false;
-                            }, 300);
+                            }, 500);
                             return;
                         }
                         const w = writers[idx];
                         if (w) {
                             w.animateCharacter({
-                                onComplete: () => { idx++; setTimeout(animateNext, 100); }
+                                onComplete: () => { idx++; setTimeout(animateNext, 250); }
                             });
                         } else {
                             idx++;
@@ -846,9 +821,7 @@
             });
         }
 
-        // ================================================================
-        // РЕЖИМЫ
-        // ================================================================
+        // ===== РЕЖИМЫ =====
         function setMode(mode) {
             if (isTransitioning) return;
             currentMode = mode;
@@ -902,9 +875,7 @@
             } catch (e) {}
         }
 
-        // ================================================================
-        // ДИКТАНТ
-        // ================================================================
+        // ===== ДИКТАНТ =====
         function calcSize(charCount) {
             const vh = window.innerHeight, vw = window.innerWidth;
             const available = vh - 60 - 50 - (charCount - 1) * 10 - 20;
@@ -1012,9 +983,7 @@
             canvasArea.innerHTML = '';
         }
 
-        // ================================================================
-        // ВИКТОРИНА
-        // ================================================================
+        // ===== ВИКТОРИНА =====
         function openQuizOverlay(index) {
             if (isOverlayOpen || !currentDeck) return;
             isOverlayOpen = true;
@@ -1083,9 +1052,7 @@
             quizOverlay.classList.remove('open');
         }
 
-        // ================================================================
-        // ИНИЦИАЛИЗАЦИЯ
-        // ================================================================
+        // ===== СТАРТ =====
         renderLevelTabs();
         renderDeckSelector();
 
