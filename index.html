@@ -130,12 +130,11 @@
         .grid-wrapper { height: calc(100vh - 60px); overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; }
 
         /* =========================================== */
-        /* СЕТКА КАРТОЧЕК — КРУПНЫЕ КУБИКИ             */
+        /* ВЕРТИКАЛЬНЫЕ КАРТОЧКИ                       */
         /* =========================================== */
         .grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            grid-auto-rows: minmax(170px, auto);
             gap: 12px;
             width: 100%;
             padding: 12px;
@@ -146,9 +145,9 @@
             border-radius: 20px;
             display: flex;
             flex-direction: column;
-            align-items: stretch;
+            align-items: center;
             justify-content: space-between;
-            padding: 14px 14px 12px;
+            padding: 14px 10px 12px;
             cursor: pointer;
             overflow: hidden;
             background: rgba(255, 255, 255, 0.035);
@@ -156,8 +155,8 @@
             border: 1px solid rgba(255, 255, 255, 0.08);
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            min-height: 170px;
-            border-left: 4px solid var(--accent);
+            aspect-ratio: 3 / 4;
+            border-top: 4px solid var(--accent);
         }
         .card:hover:not(.solved) {
             transform: translateY(-4px);
@@ -177,54 +176,102 @@
         .c6 { --accent: #f87171; } .c7 { --accent: #2dd4bf; } .c8 { --accent: #fb923c; } .c9 { --accent: #e879f9; } .c10 { --accent: #38bdf8; }
         .c11 { --accent: #4ade80; } .c12 { --accent: #facc15; } .c13 { --accent: #c084fc; } .c14 { --accent: #fb7185; } .c15 { --accent: #22d3ee; }
 
-        /* Верхняя строка: эмодзи слева, иероглиф справа */
+        /* Верх: эмодзи по центру, под ним иероглиф */
         .card-top {
             display: flex;
-            align-items: flex-start;
-            justify-content: space-between;
-            gap: 8px;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 6px;
             width: 100%;
             flex: 1;
             min-height: 0;
+            position: relative;
         }
         .emoji-col {
             flex: 0 0 auto;
-            font-size: clamp(28px, 4vh, 40px);
+            font-size: clamp(26px, 4vh, 36px);
             line-height: 1;
             display: flex;
-            align-items: flex-start;
+            align-items: center;
+            justify-content: center;
             animation: float 3s infinite ease-in-out;
+            z-index: 10;
+        }
+        .center-col {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            min-height: 60px;
+            position: relative;
+            padding: 2px 0;
         }
         .hanzi {
-            font-size: clamp(38px, 6.5vh, 60px);
+            font-size: clamp(40px, 8vh, 70px);
             font-weight: 800;
             line-height: 1;
             color: #f1f5f9;
-            text-align: right;
-            flex: 1;
-            word-break: keep-all;
-            white-space: nowrap;
-            overflow: visible;
             text-shadow: 0 0 15px rgba(255, 255, 255, 0.15);
-            align-self: flex-start;
+            transition: opacity 0.3s ease;
+            z-index: 5;
+            text-align: center;
+            white-space: nowrap;
         }
-        /* Многосложные слова чуть уменьшаем, чтобы влезали */
-        .hanzi.len-3 { font-size: clamp(30px, 5vh, 48px); }
-        .hanzi.len-4 { font-size: clamp(24px, 4vh, 38px); }
+        .hanzi.hidden { opacity: 0; position: absolute; pointer-events: none; }
+        .hanzi.len-3 { font-size: clamp(32px, 6vh, 54px); }
+        .hanzi.len-4 { font-size: clamp(26px, 5vh, 44px); }
+        .hanzi.len-5 { font-size: clamp(22px, 4vh, 36px); }
 
-        /* Нижний блок: пиньинь + перевод */
+        .writer-container {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100%; height: 100%;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+            z-index: 6;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+            gap: 2px;
+            background: transparent;
+        }
+        .writer-container.active { opacity: 1; }
+        .writer-item {
+            flex: 0 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+        }
+        .writer-item canvas,
+        .writer-item svg {
+            display: block;
+            width: 100% !important;
+            height: 100% !important;
+            background: transparent !important;
+        }
+
+        /* Низ: пиньинь и перевод */
         .info-col {
             display: flex;
             flex-direction: column;
-            align-items: flex-start;
+            align-items: center;
             justify-content: flex-end;
             gap: 3px;
             width: 100%;
             min-width: 0;
-            margin-top: 8px;
+            text-align: center;
         }
         .pinyin {
-            font-size: clamp(12px, 1.6vh, 15px);
+            font-size: clamp(12px, 1.7vh, 15px);
             color: var(--accent);
             font-weight: 800;
             letter-spacing: 0.3px;
@@ -314,34 +361,34 @@
         @media(max-width:768px) {
             .grid {
                 grid-template-columns: repeat(3, 1fr);
-                grid-auto-rows: minmax(150px, auto);
                 gap: 8px;
                 padding: 8px;
             }
-            .card { min-height: 150px; padding: 10px 10px 8px; border-radius: 16px; border-left-width: 3px; }
-            .emoji-col { font-size: clamp(22px, 3.2vh, 32px); }
-            .hanzi { font-size: clamp(30px, 5vh, 46px); }
-            .hanzi.len-3 { font-size: clamp(24px, 4vh, 38px); }
-            .hanzi.len-4 { font-size: clamp(20px, 3.2vh, 30px); }
-            .pinyin { font-size: clamp(10px, 1.3vh, 13px); }
-            .russian { font-size: clamp(10px, 1.2vh, 12px); }
+            .card { padding: 10px 8px 8px; border-radius: 16px; border-top-width: 3px; }
+            .emoji-col { font-size: clamp(22px, 3.2vh, 30px); }
+            .hanzi { font-size: clamp(32px, 6.5vh, 54px); }
+            .hanzi.len-3 { font-size: clamp(26px, 5.5vh, 44px); }
+            .hanzi.len-4 { font-size: clamp(22px, 4.5vh, 36px); }
+            .hanzi.len-5 { font-size: clamp(18px, 3.8vh, 30px); }
+            .pinyin { font-size: clamp(10px, 1.4vh, 13px); }
+            .russian { font-size: clamp(10px, 1.3vh, 12px); }
             .deck-grid { grid-template-columns: repeat(2, 1fr); }
             .search-results { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
         }
         @media(max-width:480px) {
             .grid {
                 grid-template-columns: repeat(2, 1fr);
-                grid-auto-rows: minmax(135px, auto);
                 gap: 6px;
                 padding: 6px;
             }
-            .card { min-height: 135px; padding: 8px 8px 6px; border-radius: 14px; border-left-width: 3px; }
-            .emoji-col { font-size: clamp(20px, 3vh, 28px); }
-            .hanzi { font-size: clamp(26px, 4.4vh, 38px); }
-            .hanzi.len-3 { font-size: clamp(20px, 3.6vh, 30px); }
-            .hanzi.len-4 { font-size: clamp(17px, 3vh, 24px); }
-            .pinyin { font-size: clamp(9px, 1.2vh, 11px); }
-            .russian { font-size: clamp(9px, 1.1vh, 11px); }
+            .card { padding: 8px 6px 6px; border-radius: 14px; }
+            .emoji-col { font-size: clamp(20px, 3vh, 26px); }
+            .hanzi { font-size: clamp(28px, 6vh, 44px); }
+            .hanzi.len-3 { font-size: clamp(22px, 5vh, 36px); }
+            .hanzi.len-4 { font-size: clamp(18px, 4vh, 30px); }
+            .hanzi.len-5 { font-size: clamp(16px, 3.5vh, 26px); }
+            .pinyin { font-size: 11px; }
+            .russian { font-size: 11px; }
             .search-results { grid-template-columns: repeat(2, 1fr); }
         }
     </style>
@@ -353,13 +400,11 @@
         <h1>📚 HSK — Слова по уровням</h1>
         <div class="subtitle">Выберите уровень и тему</div>
 
-        <!-- ПОИСК -->
         <div class="search-wrapper">
             <input type="text" id="searchInput" placeholder="Поиск: 我, wǒ, я..." autocomplete="off">
             <button class="search-clear" id="searchClear">✕</button>
         </div>
         <div class="search-results" id="searchResults"></div>
-        <!-- /ПОИСК -->
 
         <div class="level-tabs" id="levelTabs"></div>
         <div class="deck-grid" id="deckGrid"></div>
@@ -666,7 +711,7 @@
         }
 
         // ================================================================
-        // РЕНДЕР КАРТОЧЕК (НОВЫЙ ДИЗАЙН)
+        // РЕНДЕР КАРТОЧЕК (вертикальные, с рисованием)
         // ================================================================
         function renderCards() {
             gridEl.innerHTML = '';
@@ -678,16 +723,20 @@
                 card.className = 'card ' + ac[index % 15];
                 card.dataset.index = index;
 
-                // Определяем длину слова, чтобы подобрать размер шрифта
-                const len = item.hanzi.length;
+                const chars = item.hanzi.split('').filter(ch => ch.trim() !== '');
+                const len = chars.length;
                 let hanziClass = 'hanzi';
                 if (len === 3) hanziClass += ' len-3';
-                else if (len >= 4) hanziClass += ' len-4';
+                else if (len === 4) hanziClass += ' len-4';
+                else if (len >= 5) hanziClass += ' len-5';
 
                 card.innerHTML = `
                     <div class="card-top">
                         <div class="emoji-col">${item.em || '📝'}</div>
-                        <div class="${hanziClass}" data-char="${item.hanzi}">${item.hanzi}</div>
+                        <div class="center-col">
+                            <div class="${hanziClass}" data-char="${item.hanzi}">${item.hanzi}</div>
+                            <div class="writer-container"></div>
+                        </div>
                     </div>
                     <div class="info-col">
                         <div class="pinyin">${item.pinyin}</div>
@@ -696,26 +745,101 @@
                     <div class="pulse"></div>
                 `;
 
-                // Клик — озвучка (китайский + русский)
+                let isAnimating = false;
+
                 card.addEventListener('click', () => {
-                    if (card.classList.contains('speaking')) return;
-                    card.classList.add('speaking');
-                    const synth = window.speechSynthesis;
-                    if (!synth) { card.classList.remove('speaking'); return; }
-                    synth.cancel();
-                    const zh = new SpeechSynthesisUtterance(item.hanzi);
-                    zh.lang = 'zh-CN';
-                    zh.rate = 0.75;
-                    zh.onend = () => {
-                        const ruU = new SpeechSynthesisUtterance(item.ru);
-                        ruU.lang = 'ru-RU';
-                        ruU.rate = 0.9;
-                        ruU.onend = () => card.classList.remove('speaking');
-                        ruU.onerror = () => card.classList.remove('speaking');
-                        synth.speak(ruU);
-                    };
-                    zh.onerror = () => card.classList.remove('speaking');
-                    synth.speak(zh);
+                    // Озвучка: китайский → русский
+                    if (!card.classList.contains('speaking')) {
+                        card.classList.add('speaking');
+                        const synth = window.speechSynthesis;
+                        if (synth) {
+                            synth.cancel();
+                            const zh = new SpeechSynthesisUtterance(item.hanzi);
+                            zh.lang = 'zh-CN';
+                            zh.rate = 0.75;
+                            zh.onend = () => {
+                                const ruU = new SpeechSynthesisUtterance(item.ru);
+                                ruU.lang = 'ru-RU';
+                                ruU.rate = 0.9;
+                                ruU.onend = () => card.classList.remove('speaking');
+                                ruU.onerror = () => card.classList.remove('speaking');
+                                synth.speak(ruU);
+                            };
+                            zh.onerror = () => card.classList.remove('speaking');
+                            synth.speak(zh);
+                        } else {
+                            card.classList.remove('speaking');
+                        }
+                    }
+
+                    // Анимация рисования
+                    if (isAnimating) return;
+                    isAnimating = true;
+
+                    const hanziEl = card.querySelector('.hanzi');
+                    const writerContainer = card.querySelector('.writer-container');
+
+                    hanziEl.classList.add('hidden');
+                    writerContainer.innerHTML = '';
+                    writerContainer.classList.add('active');
+
+                    const rect = card.getBoundingClientRect();
+                    const containerSize = Math.min(rect.width * 0.75, rect.height * 0.4, 90);
+
+                    let itemSize;
+                    if (chars.length > 1) {
+                        itemSize = Math.min(containerSize / chars.length - 4, 60);
+                    } else {
+                        itemSize = Math.min(containerSize, 80);
+                    }
+                    itemSize = Math.max(itemSize, 24);
+
+                    const writers = [];
+                    chars.forEach(ch => {
+                        const wrapper = document.createElement('div');
+                        wrapper.className = 'writer-item';
+                        wrapper.style.width = itemSize + 'px';
+                        wrapper.style.height = itemSize + 'px';
+                        wrapper.style.flexShrink = '0';
+                        writerContainer.appendChild(wrapper);
+                        try {
+                            const w = HanziWriter.create(wrapper, ch, {
+                                width: itemSize,
+                                height: itemSize,
+                                padding: 2,
+                                showOutline: true,
+                                showCharacter: false,
+                                strokeAnimationSpeed: 1.5,
+                                delayBetweenStrokes: 120,
+                                strokeColor: '#ffffff',
+                                outlineColor: 'rgba(255,255,255,0.08)',
+                                strokeWidth: Math.max(2, itemSize * 0.08)
+                            });
+                            writers.push(w);
+                        } catch (e) { writers.push(null); }
+                    });
+
+                    let idx = 0;
+                    function animateNext() {
+                        if (idx >= writers.length) {
+                            setTimeout(() => {
+                                writerContainer.classList.remove('active');
+                                hanziEl.classList.remove('hidden');
+                                isAnimating = false;
+                            }, 300);
+                            return;
+                        }
+                        const w = writers[idx];
+                        if (w) {
+                            w.animateCharacter({
+                                onComplete: () => { idx++; setTimeout(animateNext, 100); }
+                            });
+                        } else {
+                            idx++;
+                            setTimeout(animateNext, 100);
+                        }
+                    }
+                    setTimeout(animateNext, 200);
                 });
 
                 gridEl.appendChild(card);
