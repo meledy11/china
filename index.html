@@ -12,6 +12,8 @@
     <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📚</text></svg>">
 
     <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js"></script>
+    <!-- Порядок важен: сначала словарь, потом адаптер -->
+    <script src="dictionary-data.js"></script>
     <script src="data.js"></script>
 
     <style>
@@ -182,7 +184,6 @@
             font-size: 14px;
         }
 
-        /* Скрываем табы и сетку колод при активном поиске */
         .deck-selector.search-active .level-tabs,
         .deck-selector.search-active .deck-grid { display: none; }
 
@@ -774,7 +775,7 @@
         <h1>📚 HSK — Слова по уровням</h1>
         <div class="subtitle">Выберите уровень и тему</div>
 
-        <!-- 🔍 ПОИСК -->
+        <!-- ПОИСК -->
         <div class="search-wrapper">
             <input type="text" id="searchInput" placeholder="Поиск: 我, wǒ, я..." autocomplete="off">
             <button class="search-clear" id="searchClear">✕</button>
@@ -834,12 +835,12 @@
         // ================================================================
         // ПРОВЕРКА ЗАГРУЗКИ DATA.JS
         // ================================================================
-        if (typeof HSK_DATA === 'undefined') {
+        if (typeof HSK_DATA === 'undefined' || !Object.keys(HSK_DATA).length) {
             document.body.innerHTML = `
                 <div style="display:flex;align-items:center;justify-content:center;height:100vh;flex-direction:column;gap:20px;padding:20px;text-align:center;">
                     <div style="font-size:48px;">⚠️</div>
                     <h2 style="color:#f87171;">Ошибка загрузки данных</h2>
-                    <p style="color:#94a3b8;max-width:400px;">Файл <strong>data.js</strong> не найден или содержит ошибку.<br>Убедитесь, что он лежит рядом с index.html.</p>
+                    <p style="color:#94a3b8;max-width:400px;">Файл <strong>data.js</strong> или <strong>dictionary-data.js</strong> не найден / содержит ошибку.<br>Убедитесь, что оба файла лежат рядом с index.html.</p>
                     <button onclick="location.reload()" style="padding:10px 30px;background:#6366f1;color:#fff;border:none;border-radius:10px;font-size:16px;cursor:pointer;">Перезагрузить</button>
                 </div>
             `;
@@ -884,7 +885,6 @@
         const modeButtons = document.querySelectorAll('[data-mode]');
         const offlineBadge = document.getElementById('offlineBadge');
 
-        // Элементы поиска
         const searchInput = document.getElementById('searchInput');
         const searchClear = document.getElementById('searchClear');
         const searchResults = document.getElementById('searchResults');
@@ -918,7 +918,7 @@
                 if (!level || !level.decks) return;
                 level.decks.forEach(deck => {
                     if (!deck.words) return;
-                    deck.words.forEach((word, wordIdx) => {
+                    deck.words.forEach((word) => {
                         const hanziNorm = normalizeStr(word.hanzi);
                         const pinyinNorm = normalizeStr(word.pinyin);
                         const ruNorm = normalizeStr(word.ru);
@@ -932,8 +932,7 @@
                                 deckId: deck.id,
                                 deckTitle: deck.title,
                                 deckCls: deck.cls,
-                                levelKey: levelKey,
-                                deckRef: deck
+                                levelKey: levelKey
                             });
                         }
                     });
@@ -961,8 +960,8 @@
 
             const limited = results.slice(0, 60);
             searchResults.innerHTML = limited.map(r => `
-                <div class="search-card ${r.deckCls || ''}" 
-                     data-level="${r.levelKey}" 
+                <div class="search-card ${r.deckCls || ''}"
+                     data-level="${r.levelKey}"
                      data-deck-id="${r.deckId}">
                     <div class="sc-emoji">${r.em}</div>
                     <div class="sc-hanzi">${highlightMatch(r.hanzi, query)}</div>
@@ -1006,7 +1005,6 @@
             searchInput.focus();
         });
 
-        // Закрытие поиска при Escape
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape' && searchInput.value) {
                 searchInput.value = '';
@@ -1312,17 +1310,6 @@
             } catch (e) {}
         }
 
-        function speakRussian(text) {
-            try {
-                const synth = window.speechSynthesis;
-                if (!synth) return;
-                const u = new SpeechSynthesisUtterance(text);
-                u.lang = 'ru-RU';
-                u.rate = 0.9;
-                synth.speak(u);
-            } catch (e) {}
-        }
-
         // ================================================================
         // ДИКТАНТ
         // ================================================================
@@ -1534,4 +1521,3 @@
 
 </body>
 </html>
-
