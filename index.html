@@ -176,7 +176,7 @@
         .c6 { --accent: #f87171; } .c7 { --accent: #2dd4bf; } .c8 { --accent: #fb923c; } .c9 { --accent: #e879f9; } .c10 { --accent: #38bdf8; }
         .c11 { --accent: #4ade80; } .c12 { --accent: #facc15; } .c13 { --accent: #c084fc; } .c14 { --accent: #fb7185; } .c15 { --accent: #22d3ee; }
 
-        /* Верхний блок: эмодзи → иероглиф */
+        /* Верхний блок: эмодзи → иероглифы столбиком */
         .card-top {
             display: flex;
             flex-direction: column;
@@ -190,7 +190,7 @@
         }
         .emoji-side {
             flex: 0 0 auto;
-            font-size: clamp(28px, 4.2vh, 42px);
+            font-size: clamp(26px, 4vh, 38px);
             line-height: 1;
             display: flex;
             align-items: center;
@@ -207,18 +207,20 @@
             width: 100%;
             min-height: 0;
             position: relative;
+            overflow: visible;
         }
         .hanzi-stack {
             display: flex;
-            flex-direction: column;
+            flex-direction: column;      /* ← вертикально, столбиком */
             align-items: center;
             justify-content: center;
-            gap: 4px;
+            gap: 2px;
             width: 100%;
             height: 100%;
         }
+        /* размеры иероглифа зависят от количества знаков */
         .hanzi {
-            font-size: clamp(56px, 9vh, 96px);
+            font-size: clamp(60px, 11vh, 110px);   /* 1 знак */
             font-weight: 800;
             line-height: 1;
             color: #f1f5f9;
@@ -228,6 +230,10 @@
             text-align: center;
             white-space: nowrap;
         }
+        .hanzi.len-2 { font-size: clamp(46px, 8vh, 84px); }
+        .hanzi.len-3 { font-size: clamp(34px, 6vh, 62px); }
+        .hanzi.len-4 { font-size: clamp(28px, 4.8vh, 50px); }
+        .hanzi.len-5 { font-size: clamp(22px, 3.9vh, 42px); }
         .hanzi.hidden { opacity: 0; position: absolute; pointer-events: none; }
 
         .writer-container {
@@ -243,7 +249,7 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 4px;
+            gap: 2px;
         }
         .writer-container.active { opacity: 1; }
         .writer-item {
@@ -351,29 +357,41 @@
         .lock-notice { text-align: center; padding: 20px; color: #94a3b8; font-size: 14px; grid-column: 1/-1; }
         .lock-notice span { color: #fbbf24; }
 
-        /* ===== АДАПТИВ ===== */
+        /* ===== АДАПТИВ — всегда 3 колонки ─────── */
         @media(max-width:900px) {
             .grid { grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 10px; }
-            .card { min-height: 210px; }
-            .hanzi { font-size: clamp(48px, 8vh, 80px); }
+            .card { min-height: 220px; padding: 12px 10px 10px; }
+            .hanzi { font-size: clamp(54px, 10vh, 96px); }
+            .hanzi.len-2 { font-size: clamp(42px, 7.5vh, 72px); }
+            .hanzi.len-3 { font-size: clamp(32px, 5.8vh, 56px); }
+            .hanzi.len-4 { font-size: clamp(26px, 4.6vh, 44px); }
+            .hanzi.len-5 { font-size: clamp(20px, 3.8vh, 36px); }
         }
         @media(max-width:768px) {
-            .grid { grid-template-columns: repeat(2, 1fr); gap: 8px; padding: 8px; }
-            .card { min-height: 190px; padding: 12px 10px 10px; border-radius: 16px; }
-            .emoji-side { font-size: clamp(24px, 3.4vh, 32px); }
-            .hanzi { font-size: clamp(46px, 8vh, 76px); }
-            .pinyin { font-size: clamp(12px, 1.6vh, 14px); }
-            .russian { font-size: clamp(11px, 1.4vh, 13px); }
+            .grid { grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 8px; }
+            .card { min-height: 200px; padding: 10px 8px 8px; border-radius: 16px; }
+            .emoji-side { font-size: clamp(22px, 3.2vh, 30px); }
+            .hanzi { font-size: clamp(48px, 9vh, 84px); }
+            .hanzi.len-2 { font-size: clamp(38px, 7vh, 66px); }
+            .hanzi.len-3 { font-size: clamp(28px, 5.4vh, 52px); }
+            .hanzi.len-4 { font-size: clamp(22px, 4.3vh, 40px); }
+            .hanzi.len-5 { font-size: clamp(18px, 3.6vh, 34px); }
+            .pinyin { font-size: clamp(11px, 1.5vh, 13px); }
+            .russian { font-size: clamp(10px, 1.3vh, 12px); }
             .deck-grid { grid-template-columns: repeat(2, 1fr); }
             .search-results { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
         }
         @media(max-width:480px) {
-            .grid { grid-template-columns: repeat(2, 1fr); gap: 6px; padding: 6px; }
-            .card { min-height: 175px; padding: 10px 8px 8px; border-radius: 14px; }
-            .emoji-side { font-size: 22px; }
-            .hanzi { font-size: clamp(40px, 7vh, 64px); }
-            .pinyin { font-size: 12px; }
-            .russian { font-size: 11px; }
+            .grid { grid-template-columns: repeat(3, 1fr); gap: 6px; padding: 6px; }
+            .card { min-height: 180px; padding: 10px 6px 8px; border-radius: 14px; }
+            .emoji-side { font-size: 20px; }
+            .hanzi { font-size: clamp(40px, 8vh, 70px); }
+            .hanzi.len-2 { font-size: clamp(32px, 6.4vh, 56px); }
+            .hanzi.len-3 { font-size: clamp(24px, 4.9vh, 44px); }
+            .hanzi.len-4 { font-size: clamp(20px, 3.9vh, 34px); }
+            .hanzi.len-5 { font-size: clamp(16px, 3.3vh, 28px); }
+            .pinyin { font-size: 11px; }
+            .russian { font-size: 10px; }
             .search-results { grid-template-columns: repeat(2, 1fr); }
         }
     </style>
@@ -718,18 +736,21 @@
                 card.dataset.index = index;
 
                 const chars = item.hanzi.split('').filter(ch => ch.trim() !== '');
+                const len = chars.length;
 
-                // Многосложные — столбиком
-                let hanziHTML = '';
-                if (chars.length > 1) {
-                    hanziHTML = `<div class="hanzi-stack">`;
-                    chars.forEach(ch => {
-                        hanziHTML += `<div class="hanzi" data-char="${ch}">${ch}</div>`;
-                    });
-                    hanziHTML += `</div>`;
-                } else {
-                    hanziHTML = `<div class="hanzi-stack"><div class="hanzi" data-char="${chars[0]}">${chars[0]}</div></div>`;
-                }
+                // размер иероглифа зависит от количества знаков
+                let hanziClass = 'hanzi';
+                if (len === 2) hanziClass += ' len-2';
+                else if (len === 3) hanziClass += ' len-3';
+                else if (len === 4) hanziClass += ' len-4';
+                else if (len >= 5) hanziClass += ' len-5';
+
+                // ВСЕГДА столбиком (вертикально)
+                let hanziHTML = `<div class="hanzi-stack">`;
+                chars.forEach(ch => {
+                    hanziHTML += `<div class="${hanziClass}" data-char="${ch}">${ch}</div>`;
+                });
+                hanziHTML += `</div>`;
 
                 card.innerHTML = `
                     <div class="card-top">
@@ -840,6 +861,21 @@
                 });
 
                 gridEl.appendChild(card);
+
+                // Авто-подгонка: если столбик не влезает — уменьшаем шрифт
+                requestAnimationFrame(() => {
+                    const area = card.querySelector('.hanzi-area');
+                    const stack = area.querySelector('.hanzi-stack');
+                    if (!area || !stack) return;
+                    const firstHanzi = stack.querySelector('.hanzi');
+                    if (!firstHanzi) return;
+                    let size = parseFloat(getComputedStyle(firstHanzi).fontSize);
+                    let safety = 30;
+                    while (stack.scrollHeight > area.clientHeight && size > 14 && safety-- > 0) {
+                        size -= 2;
+                        stack.querySelectorAll('.hanzi').forEach(h => h.style.fontSize = size + 'px');
+                    }
+                });
             });
         }
 
