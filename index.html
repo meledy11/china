@@ -129,7 +129,7 @@
         .grid-wrapper { height: calc(100vh - 60px); overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; }
 
         /* =========================================== */
-        /* ГОРИЗОНТАЛЬНЫЕ КАРТОЧКИ (как в макете)     */
+        /* ВЫСОКИЕ ВЕРТИКАЛЬНЫЕ КАРТОЧКИ               */
         /* =========================================== */
         .grid {
             display: grid;
@@ -141,11 +141,12 @@
 
         .card {
             position: relative;
-            border-radius: 16px;
+            border-radius: 18px;
             display: flex;
-            flex-direction: row;
+            flex-direction: column;
             align-items: center;
-            padding: 10px 14px 10px 18px;
+            justify-content: space-between;
+            padding: 14px 12px 12px;
             cursor: pointer;
             overflow: hidden;
             background: rgba(255, 255, 255, 0.03);
@@ -153,8 +154,9 @@
             border: 1px solid rgba(255, 255, 255, 0.08);
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            min-height: 130px;
-            border-left: 3px solid var(--accent);
+            min-height: 240px;
+            border-left: 4px solid var(--accent);
+            border-top: 4px solid var(--accent);
         }
         .card:hover:not(.solved) {
             transform: translateY(-4px);
@@ -162,7 +164,7 @@
             border-color: rgba(255, 255, 255, 0.2);
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
         }
-        .card:active { transform: scale(0.96); }
+        .card:active { transform: scale(0.97); }
         .card.solved { opacity: .25; pointer-events: none; filter: grayscale(.5); }
         .card.target-pulse { animation: targetGlow 1.5s ease infinite; }
         @keyframes targetGlow {
@@ -174,70 +176,57 @@
         .c6 { --accent: #f87171; } .c7 { --accent: #2dd4bf; } .c8 { --accent: #fb923c; } .c9 { --accent: #e879f9; } .c10 { --accent: #38bdf8; }
         .c11 { --accent: #4ade80; } .c12 { --accent: #facc15; } .c13 { --accent: #c084fc; } .c14 { --accent: #fb7185; } .c15 { --accent: #22d3ee; }
 
-        /* Левая колонка — эмодзи, пиньинь, перевод */
-        .left-info {
+        /* Верхний блок: эмодзи → иероглиф */
+        .card-top {
             display: flex;
             flex-direction: column;
-            align-items: flex-start;
-            justify-content: center;
-            z-index: 10;
-            width: 42%;
-            min-width: 0;
-            gap: 3px;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 8px;
+            width: 100%;
+            flex: 1;
+            min-height: 0;
+            position: relative;
         }
         .emoji-side {
-            font-size: clamp(18px, 3vh, 26px);
+            flex: 0 0 auto;
+            font-size: clamp(28px, 4.2vh, 42px);
             line-height: 1;
-            margin-bottom: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             animation: float 3s infinite ease-in-out;
+            z-index: 10;
         }
-        .pinyin {
-            font-size: clamp(11px, 1.5vh, 15px);
-            color: var(--accent);
-            font-weight: 800;
-            letter-spacing: 0.4px;
-            line-height: 1.1;
-            word-break: break-word;
-        }
-        .russian {
-            font-size: clamp(10px, 1.3vh, 13px);
-            color: #ffffff;
-            font-weight: 600;
-            line-height: 1.2;
-            opacity: 0.95;
-            word-break: break-word;
-            overflow-wrap: break-word;
-        }
-
-        /* Правая колонка — иероглиф(ы) + контейнер для анимации */
         .hanzi-area {
-            position: relative;
             flex: 1;
-            height: 100%;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            min-width: 0;
+            width: 100%;
+            min-height: 0;
+            position: relative;
         }
         .hanzi-stack {
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 0;
-            height: 100%;
+            gap: 4px;
             width: 100%;
+            height: 100%;
         }
         .hanzi {
-            font-size: clamp(28px, 5vh, 46px);
+            font-size: clamp(56px, 9vh, 96px);
             font-weight: 800;
-            line-height: 1.05;
+            line-height: 1;
             color: #f1f5f9;
-            text-shadow: 0 0 15px rgba(255, 255, 255, 0.15);
+            text-shadow: 0 0 18px rgba(255, 255, 255, 0.18);
             transition: opacity 0.3s ease;
             z-index: 5;
             text-align: center;
+            white-space: nowrap;
         }
         .hanzi.hidden { opacity: 0; position: absolute; pointer-events: none; }
 
@@ -254,7 +243,7 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 2px;
+            gap: 4px;
         }
         .writer-container.active { opacity: 1; }
         .writer-item {
@@ -273,14 +262,45 @@
             background: transparent !important;
         }
 
+        /* Нижний блок: пиньинь + перевод */
+        .info-col {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 4px;
+            width: 100%;
+            min-width: 0;
+            text-align: center;
+            padding-top: 8px;
+        }
+        .pinyin {
+            font-size: clamp(13px, 1.8vh, 17px);
+            color: var(--accent);
+            font-weight: 800;
+            letter-spacing: 0.4px;
+            line-height: 1.15;
+            word-break: break-word;
+            width: 100%;
+        }
+        .russian {
+            font-size: clamp(12px, 1.6vh, 15px);
+            color: #ffffff;
+            font-weight: 600;
+            line-height: 1.25;
+            opacity: 0.95;
+            word-break: break-word;
+            overflow-wrap: break-word;
+            width: 100%;
+        }
         .pulse {
-            position: absolute; bottom: 8px; right: 8px;
-            width: 6px; height: 6px;
+            position: absolute; bottom: 10px; right: 10px;
+            width: 8px; height: 8px;
             background: var(--accent);
             border-radius: 50%;
             opacity: 0; transition: opacity 0.3s;
             z-index: 20;
-            box-shadow: 0 0 8px var(--accent);
+            box-shadow: 0 0 10px var(--accent);
         }
         .card.speaking .pulse { opacity: 1; animation: blink 1s infinite; }
 
@@ -334,26 +354,26 @@
         /* ===== АДАПТИВ ===== */
         @media(max-width:900px) {
             .grid { grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 10px; }
+            .card { min-height: 210px; }
+            .hanzi { font-size: clamp(48px, 8vh, 80px); }
         }
         @media(max-width:768px) {
             .grid { grid-template-columns: repeat(2, 1fr); gap: 8px; padding: 8px; }
-            .card { min-height: 110px; padding: 8px 10px 8px 12px; }
-            .left-info { width: 45%; }
-            .emoji-side { font-size: clamp(16px, 2.6vh, 22px); }
-            .pinyin { font-size: clamp(10px, 1.3vh, 12px); }
-            .russian { font-size: clamp(9px, 1.1vh, 11px); }
-            .hanzi { font-size: clamp(24px, 4vh, 34px); }
+            .card { min-height: 190px; padding: 12px 10px 10px; border-radius: 16px; }
+            .emoji-side { font-size: clamp(24px, 3.4vh, 32px); }
+            .hanzi { font-size: clamp(46px, 8vh, 76px); }
+            .pinyin { font-size: clamp(12px, 1.6vh, 14px); }
+            .russian { font-size: clamp(11px, 1.4vh, 13px); }
             .deck-grid { grid-template-columns: repeat(2, 1fr); }
             .search-results { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
         }
         @media(max-width:480px) {
             .grid { grid-template-columns: repeat(2, 1fr); gap: 6px; padding: 6px; }
-            .card { min-height: 100px; padding: 6px 8px 6px 10px; border-radius: 12px; }
-            .left-info { width: 48%; }
-            .emoji-side { font-size: 18px; margin-bottom: 3px; }
-            .pinyin { font-size: 10px; }
-            .russian { font-size: 9px; }
-            .hanzi { font-size: clamp(20px, 3.6vh, 28px); }
+            .card { min-height: 175px; padding: 10px 8px 8px; border-radius: 14px; }
+            .emoji-side { font-size: 22px; }
+            .hanzi { font-size: clamp(40px, 7vh, 64px); }
+            .pinyin { font-size: 12px; }
+            .russian { font-size: 11px; }
             .search-results { grid-template-columns: repeat(2, 1fr); }
         }
     </style>
@@ -665,7 +685,7 @@
             }, 400);
         }
 
-        // ===== ОЗВУЧКА РУССКОГО (с разбивкой по «/») =====
+        // ===== ОЗВУЧКА РУССКОГО =====
         function speakRussian(text, onEnd) {
             const synth = window.speechSynthesis;
             let cleaned = (text || '').replace(/[\(\[\{][^\)\]\}]*[\)\]\}]/g, '').replace(/\s+/g, ' ').trim();
@@ -686,7 +706,7 @@
             next();
         }
 
-        // ===== РЕНДЕР КАРТОЧЕК (ГОРИЗОНТАЛЬНЫЕ) =====
+        // ===== РЕНДЕР КАРТОЧЕК =====
         function renderCards() {
             gridEl.innerHTML = '';
             if (!currentDeck || !currentDeck.words) return;
@@ -699,7 +719,7 @@
 
                 const chars = item.hanzi.split('').filter(ch => ch.trim() !== '');
 
-                // Многосложные — вертикальный столбик иероглифов
+                // Многосложные — столбиком
                 let hanziHTML = '';
                 if (chars.length > 1) {
                     hanziHTML = `<div class="hanzi-stack">`;
@@ -712,14 +732,16 @@
                 }
 
                 card.innerHTML = `
-                    <div class="left-info">
+                    <div class="card-top">
                         <div class="emoji-side">${item.em || '📝'}</div>
+                        <div class="hanzi-area">
+                            ${hanziHTML}
+                            <div class="writer-container"></div>
+                        </div>
+                    </div>
+                    <div class="info-col">
                         <div class="pinyin">${item.pinyin}</div>
                         <div class="russian">${item.ru}</div>
-                    </div>
-                    <div class="hanzi-area">
-                        ${hanziHTML}
-                        <div class="writer-container"></div>
                     </div>
                     <div class="pulse"></div>
                 `;
@@ -746,7 +768,7 @@
                         }
                     }
 
-                    // Анимация
+                    // Анимация рисования
                     if (isAnimating) return;
                     isAnimating = true;
 
@@ -758,17 +780,17 @@
                     writerContainer.classList.add('active');
 
                     const rect = card.getBoundingClientRect();
-                    const areaW = rect.width * 0.55;
-                    const areaH = rect.height * 0.9;
+                    const areaW = rect.width * 0.85;
+                    const areaH = rect.height * 0.55;
 
                     const charCount = chars.length;
                     let itemSize;
                     if (charCount > 1) {
-                        itemSize = Math.min(areaH / charCount - 4, areaW, 60);
+                        itemSize = Math.min(areaH / charCount - 6, areaW * 0.7, 70);
                     } else {
-                        itemSize = Math.min(areaH, areaW, 80);
+                        itemSize = Math.min(areaH, areaW * 0.7, 90);
                     }
-                    itemSize = Math.max(itemSize, 22);
+                    itemSize = Math.max(itemSize, 28);
 
                     const writers = [];
                     chars.forEach(ch => {
